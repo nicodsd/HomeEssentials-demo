@@ -1,0 +1,26 @@
+/* Animación infinita para mover el contenedor el 50% de su ancho total */
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(calc(-50% - 1rem));
+        /* Ajusta según el gap (8 = 2rem/2) */
+    }
+}
+
+.animate-marquee {
+    animation: marquee 25s linear infinite;
+}
+
+/* Opcional: Pausar el carrusel cuando el usuario pasa el mouse por encima */
+.animate-marquee:hover {
+    animation-play-state: paused;
+}
+
+/* Efecto de desvanecimiento elegante en los bordes del carrusel */
+.mask-gradient {
+    mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}

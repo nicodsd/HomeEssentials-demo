@@ -1,0 +1,81 @@
+/* --- Estilos Globales y Estructura --- */
+body {
+  background-color: #fff;
+}
+
+.scroll-container {
+  overflow-x: auto;
+  /* Enables horizontal scrolling */
+  scrollbar-width: none;
+  /* Hides scrollbar in Firefox */
+  -ms-overflow-style: none;
+  /* Hides scrollbar in IE and Edge */
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none;
+  /* Hides scrollbar in Chrome, Safari, and Opera */
+}
+
+.open {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Ocultar barra de scroll manteniendo la funcionalidad */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* Internet Explorer y Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  overflow-y: scroll;
+  /* Asegurar scroll vertical */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari y Opera */
+}
+
+/* --- Animación SlideDown (Navbar Flotante) --- */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- Carrusel Infinito (Marquee de Marcas) --- */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+
+
+/* Efecto de desvanecimiento elegante en los bordes del carrusel */
+.mask-gradient {
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+}
