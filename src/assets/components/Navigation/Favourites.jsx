@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api'
 import { TbTrashX } from 'react-icons/tb'
 import { useSelector, useDispatch } from "react-redux";
@@ -18,7 +18,6 @@ function Favourites({ openModal, onCloseModal }) {
     let headers = { headers: { 'authorization': `Bearer ${token}` } }
 
     const [favorites, setFavorite] = useState([])
-    console.log("favorites", favorites);
 
     useEffect(() => {
         if (openModal) {
@@ -30,7 +29,6 @@ function Favourites({ openModal, onCloseModal }) {
                     setFavorite(res.data.response);
                     dispatch(favNav({ fav: res.data.response.length }));
                 })
-                .catch(err => console.log(err));
         }
     }, [openModal, email])
 
@@ -41,7 +39,6 @@ function Favourites({ openModal, onCloseModal }) {
 
     const remove = (product_id) => {
         axios.delete(`${apiUrl}favorites?userEmail=${email}&productId=${product_id}`, headers).then(res => {
-            console.log(res.data.response)
             reload()
             toast.warn("Product removed from favorites", {
                 theme: "colored",
@@ -50,13 +47,11 @@ function Favourites({ openModal, onCloseModal }) {
     }
     const removeAll = () => {
         axios.delete(`${apiUrl}favorites/deleteAll?userEmail=${email}`, headers).then(res => {
-            console.log(res)
             reload()
             toast.warn("All product removed from favorites", {
                 theme: "colored",
             })
         }).catch(err => {
-            console.log(err)
             toast.error("No product in favorites", {
                 theme: "colored",
             })

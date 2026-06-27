@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState, useRef } from 'react';
 import apiUrl from '../../../api';
-import axios from 'axios';
+import axios from '../../utils/fetchWrapper.js';
 import Swal from 'sweetalert2';
 import backgroundImage from '../../../public/images/banners/Register.png';
 import logo from '../../../public/images/Logos/logo-solid-b.png';

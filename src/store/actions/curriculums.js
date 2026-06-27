@@ -1,15 +1,14 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import apiUrl from "../../../api";
 
 const  curriculums_read  = createAsyncThunk(' curriculums_read ', async () => {
     try {
-        let res = await axios(apiUrl+'admin/curriculums')
-        return {curriculums:res.data.curriculums}
+        let response = await fetch(apiUrl+'admin/curriculums')
+        let res = await response.json()
+        return {curriculums:res.curriculums}
      
         
     } catch (error) {
-        console.log(error)
         return {
             curriculums:[]
         }}})

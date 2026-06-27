@@ -12,7 +12,7 @@ import MiddlePhotoSection from "../components/HomeIndex/MiddlePhotoSection";
 import DiscountBanners from "../components/HomeIndex/DiscountBanners";
 import { useNavigate } from "react-router-dom";
 import Brands from "../components/HomeIndex/Brands";
-import axios from 'axios';
+import axios from '../../utils/fetchWrapper.js';
 import apiUrl from '../../../api';
 import cartNav_action from '../../store/actions/cartNav';
 import { ToastContainer, toast, Flip } from 'react-toastify';
@@ -95,7 +95,6 @@ const Home = () => {
         toast.error(err.response?.data?.message || "Error adding to favorites.");
       });
   };
-  console.log(cards)
   return (
     <div className='overflow-hidden bg-gray-200'>
       <div className='bg-gradient-to-br from-white via-[#9538ff3b] to-white flex flex-col gap-3'>

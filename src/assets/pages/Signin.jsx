@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../utils/fetchWrapper.js';
 import apiUrl from '../../../api';
 import { useRef } from "react";
 import backgroundImage from '../../../public/images/banners/Signin.png';

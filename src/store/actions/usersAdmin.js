@@ -1,15 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+
 import apiUrl from "../../../api";
 
 const usersAdmin = createAsyncThunk('usersAdmin', async () => {
     try {
         
-        let res = await axios(apiUrl+'users')
-        return {users:res.data.users}
+        let response = await fetch(apiUrl+'users')
+        let res = await response.json()
+        return {users:res.users}
         
     } catch (error) {
-        console.log(error)
         return {
             users:[]
             }}})

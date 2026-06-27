@@ -1,15 +1,14 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import apiUrl from "../../../api";
 
 const  contact_read  = createAsyncThunk(' contact_read ', async () => {
     try {
-        let res = await axios(apiUrl+'contact/get')
-        return {contact:res.data.contact}
+        let response = await fetch(apiUrl+'contact/get')
+        let res = await response.json()
+        return {contact:res.contact}
      
         
     } catch (error) {
-        console.log(error)
         return {
             contact:[]
         }}})

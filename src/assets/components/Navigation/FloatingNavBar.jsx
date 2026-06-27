@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link as Anchor, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
+import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from "../../../../api";
 
 import categories_actions from "../../../store/actions/categories";

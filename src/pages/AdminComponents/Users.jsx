@@ -14,7 +14,6 @@ const Users = () => {
            
         }
     }, [])
-    console.log(users)
   return (
     <div className="h-screen flex bg-gray-100">
     <NavigationComponent/>

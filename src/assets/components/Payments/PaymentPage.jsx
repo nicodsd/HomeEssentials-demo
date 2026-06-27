@@ -16,7 +16,6 @@ import { loadStripe } from '@stripe/stripe-js'
       card:elements.getElement(CardElement)
     })
     if(!error){
-      console.log(paymentMethod)
     }
   }
     return <form onSubmit={handleSubmit} className='p-9 gap-3 w-[100%] flex flex-col justify-center   border border-black ' >

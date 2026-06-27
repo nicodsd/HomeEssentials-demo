@@ -4,7 +4,7 @@ import NavigationComponent from "./NavigationComponent";
 import { useSelector, useDispatch } from "react-redux";
 import Swal from "sweetalert2";
 import action from "../../store/actions/orders";
-import axios from "axios";
+import axios from '../../utils/fetchWrapper.js';
 import apiUrl from "../../../api";
 const Orders = () => {
   let orders = useSelector((store) => store.ordersget.orders);

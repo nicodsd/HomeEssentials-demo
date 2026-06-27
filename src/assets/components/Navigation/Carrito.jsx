@@ -1,6 +1,6 @@
 import { useEffect, useState   } from 'react'
 import apiUrl from '../../../../api'
-import axios from 'axios'
+import axios from '../../../utils/fetchWrapper.js';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -11,7 +11,6 @@ const {cartNav}= cartNav_action
 function Carrito({openModal, onCloseModal}) {
   const dispatch= useDispatch()
   const navigate = useNavigate();
-  //console.log("openModal", openModal);
   const [products, setProducts] = useState([])
   const user = JSON.parse(localStorage.getItem('user')) || ""
   const email = user.email
@@ -22,7 +21,6 @@ function Carrito({openModal, onCloseModal}) {
       //capturar productos
       axios.get(`${apiUrl}cart/${email}`, headers)
               .then(res => setProducts(res.data.response))
-              .catch(err => console.log(err))
   }, [openModal]);
   const render = () => { axios.get(`${apiUrl}cart/${email}`, headers).then(res => {setProducts(res.data.response)
        
@@ -31,13 +29,11 @@ function Carrito({openModal, onCloseModal}) {
         cart:res.data.response.length
 
     })))
-    
-    }).catch(err => console.log(err))}
+  }).catch(err => console.log(err))}
   
     //Eliminar producto
     const deleteProduct = (product_id) => { 
       axios.delete(`${apiUrl}cart?userEmail=${email}&productId=${product_id}`, headers).then(res => {
-          console.log(res)
           toast.error(res.data.message[0], {
               theme: "colored",
               })

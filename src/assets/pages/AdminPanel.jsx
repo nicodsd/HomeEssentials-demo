@@ -1,12 +1,10 @@
-import axios from 'axios';
+import axios from '../../utils/fetchWrapper.js';
 import apiUrl from '../../api';
 import { useState, useEffect } from 'react';
 
 export default function AdminPanel() {
     const [users, setUser] = useState([])
     const [categories, setCategories] = useState([])
-    //console.log(users)
-    //console.log(categories)
 
     useEffect(() => {
         Promise.all([
@@ -17,7 +15,6 @@ export default function AdminPanel() {
                 setUser(usersRes.data.users);
                 setCategories(categoriesRes.data.categories);
             })
-            .catch(err => console.log(err));
     }, []);
 
 

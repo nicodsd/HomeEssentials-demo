@@ -1,5 +1,5 @@
 import { useEffect, useState} from "react";
-import axios from "axios";
+import axios from '../../utils/fetchWrapper.js';
 import apiUrl from "../../../api"
 import { uploadFile } from "../../../firebase";
 import Grid from "react-loading-icons/dist/esm/components/grid";
@@ -11,18 +11,14 @@ const UserPanel = () => {
   let navigate=useNavigate()
   const [infoUser, setInfoUser] = useState(null) 
   const user = JSON.parse(localStorage.getItem("user"))
-  //console.log("user", user);
-  //console.log("infoUser", infoUser);
   const token = localStorage.getItem("token");
   let headers = { headers: { 'authorization': `Bearer ${token}` } }
 
   const [favorites, setFavorite] = useState([])
-  useEffect(() => {axios.get(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => setFavorite(res.data.response)).catch(err => console.log(err))}, [])
   useEffect(
     () => {
       /* let token = localStorage.getItem('token')
       let headers = { headers: { 'Authorization': `Bearer ${token}`} } */
-        axios.get(apiUrl + `users/${user.email}`).then(res => setInfoUser(res.data.response)).catch(err => console.log(err))
     },
     []
 )
@@ -34,7 +30,6 @@ const UserPanel = () => {
   const [img, setImg] = useState(null)
   const [buttonSend, setButtonSend] = useState(false)
   let [loading, setLoading] = useState(false)
-  //console.log(name);
 
   const data = {}
 
@@ -44,17 +39,15 @@ const UserPanel = () => {
     email ? data.email = email : ""
     password ? data.password = password : ""
     img ? data.photo = img : ""
-    console.log(data);
 
     let token = () => localStorage.getItem('token')
     let headers = { headers: { 'authorization': `Bearer ${token()}` } }
     axios.post(apiUrl + `users/${infoUser._id}`, data, headers).then(res => {
-                                                                      setInfoUser(res.data.response)
-                                                                      console.log(res.data.message);
-                                                                      toast.success(res.data.message, {
-                                                                        theme: "colored",
-                                                                        })
-                                                                    }).catch(err => console.log(err))
+      setInfoUser(res.data.response)
+      toast.success(res.data.message, {
+        theme: "colored",
+      })
+    }).catch(err => console.log(err))
   }
   const handleSubmit = async (img) => {
     try {
@@ -67,7 +60,6 @@ const UserPanel = () => {
         }
         setLoading(false) 
     } catch (error) {
-        console.log(error);
     }
 }
 

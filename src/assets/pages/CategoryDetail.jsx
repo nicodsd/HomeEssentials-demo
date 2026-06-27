@@ -1,5 +1,5 @@
 import React from 'react'
-import axios from 'axios'
+import axios from '../../utils/fetchWrapper.js';
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiUrl from '../../../api'
@@ -15,9 +15,7 @@ const CategoryDetail = () => {
       axios(`${apiUrl}products/categories/${id}`)
         .then(res => {
             setCategoriesProd(res.data)})
-        .catch(err => console.log(err))
     }, [id])
-console.log(categoriesProd[0])
 
   return (
     <>

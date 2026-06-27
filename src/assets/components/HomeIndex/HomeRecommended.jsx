@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api';
 import { useDispatch } from 'react-redux';
 import cartNav_action from '../../../store/actions/cartNav';

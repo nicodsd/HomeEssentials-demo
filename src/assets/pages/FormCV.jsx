@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { uploadFile } from "../../../firebase";
 import Grid from "react-loading-icons/dist/esm/components/grid";
-import axios from "axios";
+import axios from '../../utils/fetchWrapper.js';
 import apiUrl from "../../../api";
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

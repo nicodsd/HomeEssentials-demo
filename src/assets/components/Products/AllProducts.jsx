@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import products_actions from '../../../store/actions/products';
 import manufacturers_action from '../../../store/actions/manufacturers';
 import categories_actions from '../../../store/actions/categories';
-import axios from 'axios';
+import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api';
 import cartNav_action from '../../../store/actions/cartNav';
 import favNav_action from '../../../store/actions/favNav';

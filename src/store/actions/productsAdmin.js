@@ -1,15 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+
 import apiUrl from "../../../api";
 
 const products_read = createAsyncThunk('products_read', async () => {
     try {
         
-        let res = await axios(apiUrl+'products')
-        return {products:res.data.products}
+        let response = await fetch(apiUrl+'products')
+        let res = await response.json()
+        return {products:res.products}
         
     } catch (error) {
-        console.log(error)
         return {
             products:[]
             }}})

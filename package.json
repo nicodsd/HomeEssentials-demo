@@ -21,7 +21,6 @@
     "@stripe/react-stripe-js": "^2.1.0",
     "@stripe/stripe-js": "^1.54.0",
     "@tailwindcss/typography": "^0.5.9",
-    "axios": "^1.4.0",
     "firebase": "^12.15.0",
     "install": "^0.13.0",
     "npm": "^11.17.0",

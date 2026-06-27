@@ -8,7 +8,6 @@ export default function () {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Datos de pago:', { numeroTarjeta, vencimientoTarjeta, cvv, nombreTarjeta });
         setNumeroTarjeta('');
         setVencimientoTarjeta('');
         setCvv('');

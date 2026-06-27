@@ -9,7 +9,7 @@ import SearchBar from "./SearchBar";
 import Carrito from "./Carrito";
 import CategoriesNav from "./CategoriesNav";
 import logo from "../../../../public/images/Logos/logo-2-b.png";
-import axios from "axios";
+import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api';
 
 const { SaveUserLogin } = userLogin_action;
