@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api';
 import productOne_action from '../../../store/actions/productOne';
 
@@ -31,15 +30,14 @@ export default function ProductDetail() {
 
   // Traer el detalle del producto al cargar el ID
   useEffect(() => {
-    axios.get(`${apiUrl}products/${id}`)
+    fetch(`${apiUrl}products/${id}`)
       .then(res => {
-        const productData = res.data.response;
+        const productData = res.response;
         setProdOne(productData);
         dispatch(productOne({
-          name: productData.name,
-          photo: productData.photo,
+          name: productData.name, photo: productData.photo,
           description: productData.description
-        }));
+        }).then(res => res.json()));
       })
       .catch(err => console.error("Error fetching product data:", err));
   }, [id, dispatch, productOne]);
@@ -53,13 +51,13 @@ export default function ProductDetail() {
 
     const data = { userEmail: email, productId: product_id };
 
-    axios.post(`${apiUrl}cart/create`, data, headers)
+    fetch(`${apiUrl}cart/create`, { ...headers, method: 'POST', body: JSON.stringify(data), headers: { ...headers?.headers, 'Content-Type': 'application/json' } }).then(res => res.json())
       .then(res => {
-        const message = Array.isArray(res.data.message) ? res.data.message[0] : res.data.message;
+        const message = Array.isArray(res.message) ? res.message[0] : res.message;
         toast.success(message || "Added to cart successfully!");
 
         // Re-sincronizar el número total del carrito global
-        axios.get(`${apiUrl}cart/${email}`, headers)
+        fetch(`${apiUrl}cart/${email}`, headers).then(res => res.json())
           .then(cartRes => {
             dispatch(cartNav({ cart: cartRes.data.response.length }));
           })
@@ -67,7 +65,7 @@ export default function ProductDetail() {
       })
       .catch(err => {
         console.error(err);
-        const errMsg = err.response?.data?.message;
+        const errMsg = err.message;
         toast.error(Array.isArray(errMsg) ? errMsg[0] : errMsg || "Error adding product.");
       });
   };
@@ -80,10 +78,10 @@ export default function ProductDetail() {
     }
 
     const data = { userEmail: email, productId: product_id };
-    axios.post(`${apiUrl}favorites`, data, headers)
+    fetch(`${apiUrl}favorites`, { ...headers, method: 'POST', body: JSON.stringify(data), headers: { ...headers?.headers, 'Content-Type': 'application/json' } }).then(res => res.json())
       .then(() => {
         toast.success("Article added to favorites 💜");
-        axios.get(`${apiUrl}favorites?userEmail=${email}`, headers)
+        fetch(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => res.json())
           .then(favRes => {
             dispatch(favNav({ fav: favRes.data.response.length }));
           })
@@ -91,7 +89,7 @@ export default function ProductDetail() {
       })
       .catch(err => {
         console.error(err);
-        toast.error(err.response?.data?.message || "Error adding to favorites.");
+        toast.error(err.message || "Error adding to favorites.");
       });
   };
 

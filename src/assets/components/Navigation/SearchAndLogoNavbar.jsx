@@ -9,8 +9,8 @@ import SearchBar from "./SearchBar";
 import Carrito from "./Carrito";
 import CategoriesNav from "./CategoriesNav";
 import logo from "../../../../public/images/Logos/logo-2-b.png";
-import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api';
+import { getSafeUser } from '../../../utils/authUtils';
 
 const { SaveUserLogin } = userLogin_action;
 const { favNav } = favNav_action;
@@ -37,7 +37,7 @@ const SearchAndLogoNavbar = () => {
   const [seeButtonsUser, setSeeButtonsUser] = useState(true);
 
   // Obtención unificada del usuario y token (Redux con fallback a LocalStorage)
-  const userFallback = JSON.parse(localStorage.getItem('user')) || {};
+  const userFallback = getSafeUser();
   const tokenCurrent = userLogin.token || localStorage.getItem('token');
   const userCurrent = userLogin.user?.name ? userLogin.user : userFallback;
   const email = userCurrent?.email;
@@ -54,11 +54,11 @@ const SearchAndLogoNavbar = () => {
   useEffect(() => {
     if (email && tokenCurrent) {
       const headers = { headers: { 'authorization': `Bearer ${tokenCurrent}` } };
-      axios.get(`${apiUrl}cart/${email}`, headers)
+      fetch(`${apiUrl}cart/${email}`, headers).then(res => res.json())
         .catch(err => console.error("Error fetching cart data:", err));
 
-      axios.get(`${apiUrl}favorites?userEmail=${email}`, headers)
-        .then(res => dispatch(favNav({ fav: res.data.response.length })))
+      fetch(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => res.json())
+        .then(res => dispatch(favNav({ fav: res.response.length })))
         .catch(err => console.error("Error fetching favorites data:", err));
     }
   }, [email, tokenCurrent]);
@@ -69,7 +69,7 @@ const SearchAndLogoNavbar = () => {
 
   const handleSignOut = () => {
     const headers = { headers: { 'authorization': `Bearer ${tokenCurrent}` } };
-    axios.post(`${apiUrl}auth/signout`, { email }, headers)
+    fetch(`${apiUrl}auth/signout`, { ...headers, method: 'POST', body: JSON.stringify({ email }), headers: { ...headers?.headers, 'Content-Type': 'application/json' } }).then(res => res.json())
       .finally(() => {
         localStorage.clear();
         dispatch(SaveUserLogin({ token: "", user: {} }));

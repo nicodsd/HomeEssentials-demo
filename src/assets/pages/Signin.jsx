@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from '../../utils/fetchWrapper.js';
 import apiUrl from '../../../api';
 import { useRef } from "react";
 import backgroundImage from '../../../public/images/banners/Signin.png';
@@ -35,16 +34,20 @@ export default function Signin() {
 
     try {
       setLoading(true);
-      const res = await axios.post(`${apiUrl}auth/signin`, dataUser);
+      const res = await fetch(`${apiUrl}auth/signin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataUser)
+      }).then(res => res.json());
 
-      // Persistencia en almacenamiento local
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
 
-      // Sincronización con Redux
       dispatch(SaveUserLogin({
-        token: res.data.token,
-        user: res.data.user
+        token: res.token,
+        user: res.user
       }));
 
       setTimeout(() => {
@@ -53,7 +56,7 @@ export default function Signin() {
 
     } catch (err) {
       console.error(err);
-      const errorMsg = err.response?.data?.message || "Invalid email or password.";
+      const errorMsg = err.message || "Invalid email or password.";
       alert(Array.isArray(errorMsg) ? errorMsg[0] : errorMsg);
     } finally {
       setLoading(false);

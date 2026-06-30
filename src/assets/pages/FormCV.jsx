@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { uploadFile } from "../../../firebase";
 import Grid from "react-loading-icons/dist/esm/components/grid";
-import axios from '../../utils/fetchWrapper.js';
 import apiUrl from "../../../api";
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -110,9 +109,15 @@ export default function FormCV() {
             };
 
             // 3. Petición al servidor
-            const res = await axios.post(`${apiUrl}curriculums`, finalData);
+            const res = await fetch(`${apiUrl}curriculums`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(finalData)
+            }).then(res => res.json());
 
-            toast.success(`${res.data.Curriculums.name}, your CV was successfully saved!`, {
+            toast.success(`${res.Curriculums?.name || 'User'}, your CV was successfully saved!`, {
                 theme: "colored"
             });
 

@@ -8,7 +8,6 @@ import { useSelector, useDispatch } from "react-redux";
 import categories_actions from "../../store/actions/categories";
 import manufacturers_actions from "../../store/actions/manufacturers";
 import { useNavigate } from "react-router-dom";
-import axios from '../../utils/fetchWrapper.js';
 import apiUrl from "../../../api";
 const Products = () => {
   const dispatch = useDispatch();
@@ -24,9 +23,9 @@ const Products = () => {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [page, setPage] = useState(1);
   useEffect(() => {
-    axios(`${apiUrl}products/sixcards?page=${page}`)
+    fetch(`${apiUrl}products/sixcards?page=${page}`).then(res => res.json())
       .then((res) => {
-        setProductData(res.data);
+        setProductData(res);
       })
   }, [page]);
 

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api';
 import { useDispatch } from 'react-redux';
 import cartNav_action from '../../../store/actions/cartNav';
@@ -15,10 +14,11 @@ const HomeRecommended = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get(`${apiUrl}products`);
-        let allProducts = response.data.products || [];
+        const response = await fetch(`${apiUrl}products`);
+        const data = await response.json();
 
-        // Filter by varied categories
+        let allProducts = data?.data?.products || data?.products || data?.response || [];
+
         const categoryMap = new Map();
         for (const product of allProducts) {
           if (!categoryMap.has(product.category_id?._id || product.category_id)) {
@@ -26,10 +26,8 @@ const HomeRecommended = () => {
           }
         }
 
-        // Take up to 4 varied products
         let variedProducts = Array.from(categoryMap.values()).slice(0, 4);
 
-        // If we don't have enough varied products, just fill with random ones
         if (variedProducts.length < 4) {
           const filledProducts = [...variedProducts];
           const remainingProducts = allProducts.filter(p => !filledProducts.some(fp => fp._id === p._id));
@@ -52,6 +50,7 @@ const HomeRecommended = () => {
     if (stock <= 3) return { label: `Only ${stock} left!`, color: "bg-amber-600 text-amber-100" };
     return { label: "In Stock", color: "bg-emerald-700 text-emerald-100" };
   };
+
   const redirectToAllProducts = () => {
     navigate('/allproducts');
   };
@@ -68,11 +67,11 @@ const HomeRecommended = () => {
     const headers = { headers: { 'authorization': `Bearer ${token}` } };
     const data = { userEmail: email, productId: product_id };
 
-    axios.post(`${apiUrl}cart/create`, data, headers)
+    fetch(`${apiUrl}cart/create`, { ...headers, method: 'POST', body: JSON.stringify(data), headers: { ...headers?.headers, 'Content-Type': 'application/json' } }).then(res => res.json())
       .then(res => {
-        const message = Array.isArray(res.data.message) ? res.data.message[0] : res.data.message;
+        const message = Array.isArray(res.message) ? res.message[0] : res.message;
         toast.success(message || "Added to cart successfully!");
-        axios.get(`${apiUrl}cart/${email}`, headers)
+        fetch(`${apiUrl}cart/${email}`, headers).then(res => res.json())
           .then(cartRes => {
             dispatch(cartNav({ cart: cartRes.data.response.length }));
           })
@@ -80,7 +79,7 @@ const HomeRecommended = () => {
       })
       .catch(err => {
         console.error(err);
-        const errMsg = err.response?.data?.message;
+        const errMsg = err.message;
         toast.error(Array.isArray(errMsg) ? errMsg[0] : errMsg || "Error adding product.");
       });
   };
@@ -105,7 +104,7 @@ const HomeRecommended = () => {
       <div className="w-full">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 w-full justify-center justify-items-center relative">
           <div className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
           </div>
           {recommendedProducts.map((prod) => {
             const stockStatus = getStockStatus(prod.stock_Available);
@@ -154,10 +153,10 @@ const HomeRecommended = () => {
       </div>
 
       <div className="lg:flex hidden flex-col mt-3 lg:mt-8 md:mt-0 justify-center items-center w-1/2">
-        <h3 className="text-2xl hidden md:text-3xl mb-4 md:flex items-center justify-start gap-2 font-semibold text-start">
+        <h3 className="text-2xl hidden md:text-3xl mb-4 md:flex items-center justify-start gap-2 font-normal text-start">
           Recommended for You
         </h3>
-        <p className="text-slate-600 mb-3 lg:mb-6 text-center">Selected specially from our varied categories</p>
+        <p className="text-slate-600 mb-3 lg:mb-6 text-center">Specially selected products.</p>
         <button
           onClick={redirectToAllProducts}
           className="group flex justify-center items-center gap-2 w-fit px-8 bg-[#000000] hover:bg-[#6333c7] text-white py-3 sm:py-3.5 rounded-xl font-bold shadow-md transition-all duration-300 transform active:scale-95"

@@ -1,19 +1,16 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 
 import products_actions from '../../../store/actions/products';
 import manufacturers_action from '../../../store/actions/manufacturers';
 import categories_actions from '../../../store/actions/categories';
-import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api';
 import cartNav_action from '../../../store/actions/cartNav';
 import favNav_action from '../../../store/actions/favNav';
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// 1. EXTRAÍDO: Las funciones que no dependen del estado del componente deben ir por fuera 
-// para no re-crearse en memoria en cada render.
 const getStockStatus = (stock) => {
   if (stock === 0) return { label: "Out of stock", color: "bg-red-600 text-red-100" };
   if (stock <= 3) return { label: `Only ${stock} left!`, color: "bg-amber-600 text-amber-100" };
@@ -36,26 +33,21 @@ const AllProducts = () => {
   const manufacturers = useSelector(store => store.manufacturerHome.manufacturers || []);
   const categories = useSelector(store => store.categories.categories || []);
 
-  // Estados locales para controlar las selecciones de filtros
   const [selectedManufacturers, setSelectedManufacturers] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [sortPrice, setSortPrice] = useState(""); // "" | "asc" | "desc"
+  const [sortPrice, setSortPrice] = useState("");
 
-  // Estado para paginación
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Estado para el panel lateral en móviles
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  // Carga inicial de datos si están vacíos
   useEffect(() => {
     if (products.length === 0) dispatch(products_read());
     if (manufacturers.length === 0) dispatch(manufacturers_read());
     if (categories.length === 0) dispatch(categories_read());
   }, [dispatch, products.length, manufacturers.length, categories.length, products_read, manufacturers_read, categories_read]);
 
-  // Sincronizar URL slug con filtros locales
   useEffect(() => {
     if (categories.length > 0) {
       if (category_slug) {
@@ -69,22 +61,22 @@ const AllProducts = () => {
     }
   }, [category_slug, categories]);
 
-  // Handler para los cambios en fabricantes (Checkboxes)
-  const handleManufacturerChange = (id) => {
+  // Handler para los cambios en fabricantes
+  const handleManufacturerChange = useCallback((id) => {
     setSelectedManufacturers(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
-  };
+  }, []);
 
-  // Handler para los cambios en categorías (Checkboxes)
-  const handleCategoryChange = (id) => {
+  // Handler para los cambios en categorías
+  const handleCategoryChange = useCallback((id) => {
     setSelectedCategories(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
-  };
+  }, []);
 
   // Limpiar todos los filtros activos
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     if (category_slug) {
       navigate('/allproducts');
     }
@@ -92,70 +84,94 @@ const AllProducts = () => {
     setSelectedCategories([]);
     setSortPrice("");
     setCurrentPage(1);
-  };
+  }, [navigate, category_slug]);
 
   // Resetear la página al cambiar cualquier filtro
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedManufacturers, selectedCategories, sortPrice, category_slug]);
 
-  const handleAddToCart = (e, product_id) => {
-    e.stopPropagation();
+  // Función auxiliar para obtener credenciales
+  const getUserAuth = () => {
     const user = JSON.parse(localStorage.getItem('user')) || null;
     const token = localStorage.getItem('token') || "";
-    const email = user?.email || "";
+    return { email: user?.email || "", token };
+  };
+
+  const handleAddToCart = useCallback(async (e, product_id) => {
+    e.stopPropagation();
+    const { email, token } = getUserAuth();
+
     if (!token) {
       toast.warning("Please sign in to add products to your cart.");
       return;
     }
-    const headers = { headers: { 'authorization': `Bearer ${token}` } };
-    const data = { userEmail: email, productId: product_id };
 
-    axios.post(`${apiUrl}cart/create`, data, headers)
-      .then(res => {
-        const message = Array.isArray(res.data.message) ? res.data.message[0] : res.data.message;
-        toast.success(message || "Added to cart successfully!");
-        axios.get(`${apiUrl}cart/${email}`, headers)
-          .then(cartRes => {
-            dispatch(cartNav({ cart: cartRes.data.response.length }));
-          })
-          .catch(err => console.error(err));
-      })
-      .catch(err => {
-        console.error(err);
-        const errMsg = err.response?.data?.message;
-        toast.error(Array.isArray(errMsg) ? errMsg[0] : errMsg || "Error adding product.");
+    const headers = {
+      'authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      const res = await fetch(`${apiUrl}cart/create`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userEmail: email, productId: product_id })
       });
-  };
+      const data = await res.json();
 
-  const handleAddToFavorites = (e, product_id) => {
+      if (!res.ok) throw new Error(data.message || "Error adding product.");
+
+      const message = Array.isArray(data.message) ? data.message[0] : data.message;
+      toast.success(message || "Added to cart successfully!");
+
+      const cartRes = await fetch(`${apiUrl}cart/${email}`, { headers });
+      const cartData = await cartRes.json();
+      dispatch(cartNav({ cart: cartData.data?.response?.length || 0 }));
+
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.message;
+      toast.error(Array.isArray(errMsg) ? errMsg[0] : errMsg || "Error adding product.");
+    }
+  }, [dispatch, cartNav]);
+
+  const handleAddToFavorites = useCallback(async (e, product_id) => {
     e.stopPropagation();
-    const user = JSON.parse(localStorage.getItem('user')) || null;
-    const token = localStorage.getItem('token') || "";
-    const email = user?.email || "";
+    const { email, token } = getUserAuth();
+
     if (!token) {
       toast.warning("Please sign in to save favorites.");
       return;
     }
-    const headers = { headers: { 'authorization': `Bearer ${token}` } };
-    const data = { userEmail: email, productId: product_id };
-    axios.post(`${apiUrl}favorites`, data, headers)
-      .then(() => {
-        toast.success("Article added to favorites 💜");
-        axios.get(`${apiUrl}favorites?userEmail=${email}`, headers)
-          .then(favRes => {
-            dispatch(favNav({ fav: favRes.data.response.length }));
-          })
-          .catch(err => console.error(err));
-      })
-      .catch(err => {
-        console.error(err);
-        toast.error(err.response?.data?.message || "Error adding to favorites.");
-      });
-  };
 
-  // 2. OPTIMIZACIÓN: useMemo evita que `.filter()` y `.sort()` se ejecuten si los filtros no cambiaron
-  // (Por ejemplo, al abrir el menú de móvil o cambiar de página, esto ya no se recalcula).
+    const headers = {
+      'authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      const res = await fetch(`${apiUrl}favorites`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userEmail: email, productId: product_id })
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Error adding to favorites.");
+
+      toast.success("Article added to favorites 💜");
+
+      const favRes = await fetch(`${apiUrl}favorites?userEmail=${email}`, { headers });
+      const favData = await favRes.json();
+      dispatch(favNav({ fav: favData.data?.response?.length || 0 }));
+
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Error adding to favorites.");
+    }
+  }, [dispatch, favNav]);
+
   const filteredProducts = useMemo(() => {
     return products
       .filter(prod => selectedManufacturers.length === 0 || selectedManufacturers.includes(prod.manufacturer_id))
@@ -167,15 +183,41 @@ const AllProducts = () => {
       });
   }, [products, selectedManufacturers, selectedCategories, sortPrice]);
 
-  // 3. OPTIMIZACIÓN: Memoizamos la paginación para depender solo de filteredProducts y currentPage
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
   const paginatedProducts = useMemo(() => {
     return filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   }, [filteredProducts, currentPage, itemsPerPage]);
 
-  // 4. CORRECCIÓN DE ANTI-PATRÓN: Convertimos <FiltersContent /> en una variable JSX
-  // Evita que React desmonte y vuelva a montar los inputs en cada renderizado.
+  // Memoización del texto dinámico de la miga de pan (Breadcrumb)
+  const breadcrumbJSX = useMemo(() => {
+    let activeCats = selectedCategories;
+    if (activeCats.length === 0 && products.length > 0) {
+      const uniqueCats = [...new Set(products.map(p => p.category_id))];
+      if (uniqueCats.length > 0 && uniqueCats.length < categories.length) {
+        activeCats = uniqueCats;
+      }
+    }
+
+    if (activeCats.length === 1) {
+      const catName = categories.find(c => c._id === activeCats[0])?.name;
+      return (
+        <>
+          <span className="mx-2 font-bold opacity-50">&gt;</span>
+          <span className="text-slate-800 font-bold">{catName}</span>
+        </>
+      );
+    } else if (activeCats.length > 1) {
+      return (
+        <>
+          <span className="mx-2 font-bold opacity-50">&gt;</span>
+          <span className="text-slate-800 font-bold">Multiple Categories</span>
+        </>
+      );
+    }
+    return null;
+  }, [selectedCategories, products, categories]);
+
   const filtersContentJSX = (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -289,33 +331,7 @@ const AllProducts = () => {
             <span onClick={() => navigate('/')} className="cursor-pointer hover:text-[#7847E0] transition-colors">Home</span>
             <span className="mx-2 font-bold opacity-50">&gt;</span>
             <span onClick={clearFilters} className={`cursor-pointer hover:text-[#7847E0] transition-colors ${selectedCategories.length === 0 ? "text-slate-800 font-bold" : ""}`}>Products</span>
-            {(() => {
-              let activeCats = selectedCategories;
-              if (activeCats.length === 0 && products.length > 0) {
-                const uniqueCats = [...new Set(products.map(p => p.category_id))];
-                if (uniqueCats.length > 0 && uniqueCats.length < categories.length) {
-                  activeCats = uniqueCats;
-                }
-              }
-
-              if (activeCats.length === 1) {
-                const catName = categories.find(c => c._id === activeCats[0])?.name;
-                return (
-                  <>
-                    <span className="mx-2 font-bold opacity-50">&gt;</span>
-                    <span className="text-slate-800 font-bold">{catName}</span>
-                  </>
-                );
-              } else if (activeCats.length > 1) {
-                return (
-                  <>
-                    <span className="mx-2 font-bold opacity-50">&gt;</span>
-                    <span className="text-slate-800 font-bold">Multiple Categories</span>
-                  </>
-                );
-              }
-              return null;
-            })()}
+            {breadcrumbJSX}
           </div>
 
           {filteredProducts.length === 0 ? (
@@ -342,12 +358,11 @@ const AllProducts = () => {
                         />
 
                         <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-
                           <div className="flex gap-1.5 flex-wrap">
                             <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full ${stockStatus.color}`}>
                               {stockStatus.label}
                             </span>
-                            <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-600 text-blue-100">
+                            <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-600 text-blue-100 shadow-sm">
                               NEW
                             </span>
                           </div>
@@ -356,33 +371,32 @@ const AllProducts = () => {
                             onClick={(e) => handleAddToFavorites(e, prod._id)}
                             className="text-slate-900 hover:text-red-500 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm transition-colors"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4 text-black">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12" />
                             </svg>
                           </button>
                         </div>
-
                       </div>
 
-                      <div className="p-2 flex flex-col flex-grow justify-start">
-                        <h3 className="font-semibold text-slate-800 text-[14px] group-hover:text-[#7847E0] transition-colors leading-none line-clamp-2">
+                      <div className="p-2 flex flex-col flex-grow justify-between">
+                        <h3 className="font-semibold text-slate-800 text-[15px] group-hover:text-[#7847E0] transition-colors leading-none line-clamp-2">
                           {prod.name}
                         </h3>
                         <p className="text-[11px] mt-1 text-slate-600 line-clamp-3">{prod.description}</p>
-                      </div>
-                      <div className="flex items-end justify-between p-2">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-lg sm:text-xl text-[#290a6d]">
-                            {Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(prod.price)}
-                          </span>
-                        </div>
-                        <div
-                          onClick={(e) => handleAddToCart(e, prod._id)}
-                          className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-[#7847E0] flex items-center justify-center transition-colors shadow-sm shrink-0"
-                        >
-                          <svg fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-slate-600 group-hover:text-white transition-colors" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                          </svg>
+                        <div className="flex items-end justify-between mt-2">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-lg sm:text-xl text-[#0e0424]">${" "}
+                              {Intl.NumberFormat('en-US', { currency: 'USD' }).format(prod.price)}
+                            </span>
+                          </div>
+                          <div
+                            onClick={(e) => handleAddToCart(e, prod._id)}
+                            className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-[#7847E0] flex items-center justify-center transition-colors shadow-sm shrink-0"
+                          >
+                            <svg fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-slate-600 group-hover:text-white transition-colors" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>

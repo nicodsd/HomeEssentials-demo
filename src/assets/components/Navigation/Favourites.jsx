@@ -1,4 +1,3 @@
-import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from '../../../../api'
 import { TbTrashX } from 'react-icons/tb'
 import { useSelector, useDispatch } from "react-redux";
@@ -6,39 +5,37 @@ import favNav_action from '../../../store/actions/favNav';
 import { useState, useEffect } from 'react'
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { getSafeUser } from '../../../utils/authUtils';
 
-// eslint-disable-next-line react/prop-types
 function Favourites({ openModal, onCloseModal }) {
     const { userLogin } = useSelector(store => store)
     const dispatch = useDispatch();
     const { favNav } = favNav_action;
-    const user = JSON.parse(localStorage.getItem('user')) || {}
-    const email = userLogin?.user?.email || user?.email
-    const [token, setToken] = useState(localStorage.getItem('token'))
-    let headers = { headers: { 'authorization': `Bearer ${token}` } }
 
+    const userFallback = getSafeUser();
+    const tokenCurrent = userLogin.token || localStorage.getItem('token');
+    const userCurrent = userLogin.user?.name ? userLogin.user : userFallback;
+    const email = userCurrent?.email;
+    let headers = { headers: { 'authorization': `Bearer ${tokenCurrent}` } }
     const [favorites, setFavorite] = useState([])
 
     useEffect(() => {
         if (openModal) {
-            const currentToken = localStorage.getItem('token');
-            setToken(currentToken);
-            const currentHeaders = { headers: { 'authorization': `Bearer ${currentToken}` } };
-            axios.get(`${apiUrl}favorites?userEmail=${email}`, currentHeaders)
+            fetch(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => res.json())
                 .then(res => {
-                    setFavorite(res.data.response);
-                    dispatch(favNav({ fav: res.data.response.length }));
+                    setFavorite(res.response);
+                    dispatch(favNav({ fav: res.response.length }));
                 })
         }
     }, [openModal, email])
 
-    const reload = () => axios.get(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => {
-        setFavorite(res.data.response);
-        dispatch(favNav({ fav: res.data.response.length }));
+    const reload = () => fetch(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => res.json()).then(res => {
+        setFavorite(res.response);
+        dispatch(favNav({ fav: res.response.length }));
     }).catch(err => console.log(err))
 
     const remove = (product_id) => {
-        axios.delete(`${apiUrl}favorites?userEmail=${email}&productId=${product_id}`, headers).then(res => {
+        fetch(`${apiUrl}favorites?userEmail=${email}&productId=${product_id}`, { ...headers, method: 'DELETE' }).then(res => res.json()).then(res => {
             reload()
             toast.warn("Product removed from favorites", {
                 theme: "colored",
@@ -46,7 +43,7 @@ function Favourites({ openModal, onCloseModal }) {
         }).catch(err => console.log(err))
     }
     const removeAll = () => {
-        axios.delete(`${apiUrl}favorites/deleteAll?userEmail=${email}`, headers).then(res => {
+        fetch(`${apiUrl}favorites/deleteAll?userEmail=${email}`, { ...headers, method: 'DELETE' }).then(res => res.json()).then(res => {
             reload()
             toast.warn("All product removed from favorites", {
                 theme: "colored",

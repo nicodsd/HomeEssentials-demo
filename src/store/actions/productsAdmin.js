@@ -4,15 +4,19 @@ import apiUrl from "../../../api";
 
 const products_read = createAsyncThunk('products_read', async () => {
     try {
-        
-        let response = await fetch(apiUrl+'products')
+        let response = await fetch(apiUrl + 'products')
         let res = await response.json()
-        return {products:res.products}
-        
+        if (res.success) {
+            console.log(res.products)
+            return { products: res.products }
+        }
+        return { products: [] }
     } catch (error) {
         return {
-            products:[]
-            }}})
+            products: []
+        }
+    }
+})
 
-const actions={products_read}
-export default  actions
+const actions = { products_read }
+export default actions

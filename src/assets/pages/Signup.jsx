@@ -1,7 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import React, { useState, useRef } from 'react';
 import apiUrl from '../../../api';
-import axios from '../../utils/fetchWrapper.js';
 import Swal from 'sweetalert2';
 import backgroundImage from '../../../public/images/banners/Register.png';
 import logo from '../../../public/images/Logos/logo-solid-b.png';
@@ -44,34 +43,45 @@ export default function Signup() {
     setLoading(true);
 
     // 1. Petición de Registro (Signup)
-    axios.post(`${apiUrl}auth/signup`, data)
-      .then(() => {
-        // 2. Petición de Inicio de Sesión inmediato (Signin) tras un registro exitoso
-        axios.post(`${apiUrl}auth/signin`, dataUser)
-          .then((res) => {
-            localStorage.setItem("token", res.data.token);
-            localStorage.setItem("user", JSON.stringify(res.data.user));
+    fetch(`${apiUrl}auth/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    }).then(res => res.json()).then(res => {
+      // 2. Petición de Inicio de Sesión inmediato (Signin) tras un registro exitoso
+      fetch(`${apiUrl}auth/signin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataUser)
+      }).then(res => res.json())
+        .then((res) => {
+          localStorage.setItem("token", res.token);
+          localStorage.setItem("user", JSON.stringify(res.user));
 
-            Swal.fire({
-              title: "User created successfully, welcome!",
-              icon: "success",
-              showConfirmButton: true,
-              confirmButtonText: "OK",
-              allowOutsideClick: false
-            }).then(() => {
-              navigate("/");
-            });
-          })
-          .catch((err) => {
-            console.error(err);
-            const errMsg = err.response?.data?.message || "Error logging in after registration.";
-            Swal.fire("Error", Array.isArray(errMsg) ? errMsg[0] : errMsg, "error");
-          })
-          .finally(() => setLoading(false));
-      })
+          Swal.fire({
+            title: "User created successfully, welcome!",
+            icon: "success",
+            showConfirmButton: true,
+            confirmButtonText: "OK",
+            allowOutsideClick: false
+          }).then(() => {
+            navigate("/");
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+          const errMsg = err.message || "Error logging in after registration.";
+          Swal.fire("Error", Array.isArray(errMsg) ? errMsg[0] : errMsg, "error");
+        })
+        .finally(() => setLoading(false));
+    })
       .catch((err) => {
         console.error(err);
-        const errMsg = err.response?.data?.message || "Registration failed.";
+        const errMsg = err.message || "Registration failed.";
         Swal.fire("Error", Array.isArray(errMsg) ? errMsg[0] : errMsg, "error");
         setLoading(false);
       });

@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from '../../utils/fetchWrapper.js';
 import apiUrl from '../../../api';
 import { useDispatch, useSelector } from 'react-redux';
 import { initMercadoPago, Wallet } from '@mercadopago/sdk-react';
@@ -58,7 +57,7 @@ const Cart = () => {
         }
         return products.map(p => p.product_id?._id);
     }, [products, hasFetched]);
-    
+
     useEffect(() => {
         if (hasFetched) {
             localStorage.setItem('cartProductIds', JSON.stringify(cartProductIds));
@@ -71,9 +70,9 @@ const Cart = () => {
 
     const fetchCartItems = useCallback(() => {
         if (!email) return;
-        axios.get(`${apiUrl}cart/${email}`, headers)
+        fetch(`${apiUrl}cart/${email}`, headers).then(res => res.json())
             .then(res => {
-                const cartItems = res.data.response || [];
+                const cartItems = res.response || [];
                 setProducts(cartItems);
                 setHasFetched(true);
                 dispatch(cartNav({ cart: cartItems.length }));
@@ -92,27 +91,60 @@ const Cart = () => {
         }, 0);
     }, [products]);
 
+    // Agregar producto al carrito
     const addProduct = (product_id) => {
-        axios.post(`${apiUrl}cart/create`, { userEmail: email, productId: product_id }, headers)
+        fetch(`${apiUrl}cart/create`, {
+            method: 'POST',
+            headers: {
+                ...headers?.headers,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userEmail: email,
+                productId: product_id,
+            }),
+        })
+            .then(res => res.json())
             .then(() => fetchCartItems())
             .catch(err => console.error(err));
     };
 
+    // Restar producto del carrito
     const substractProduct = (product_id) => {
-        axios.put(`${apiUrl}cart/subtract`, { userEmail: email, productId: product_id }, headers)
+        fetch(`${apiUrl}cart/subtract`, {
+            method: 'PUT',
+            headers: {
+                ...headers?.headers,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userEmail: email,
+                productId: product_id,
+            }),
+        })
+            .then(res => res.json())
             .then(() => fetchCartItems())
             .catch(err => console.error(err));
     };
 
+    // Eliminar producto del carrito
     const deleteProduct = (product_id) => {
-        axios.delete(`${apiUrl}cart?userEmail=${email}&productId=${product_id}`, headers)
+        fetch(`${apiUrl}cart?userEmail=${email}&productId=${product_id}`, {
+            method: 'DELETE',
+            headers: {
+                ...headers?.headers,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(res => res.json())
             .then(() => fetchCartItems())
             .catch(err => console.error(err));
     };
 
-    // Procesar e integrar el botón de Mercado Pago al instante
+    // Procesar checkout con Mercado Pago
     const processCheckout = async (e) => {
         e.preventDefault();
+
         if (!address || !country || !dni || !phoneNumber) {
             toast.error("Please fill in all delivery fields to unlock payment.");
             return;
@@ -120,15 +152,30 @@ const Cart = () => {
 
         try {
             setLoadingPayment(true);
+
             const body = { address, country, dni, phoneNumber };
 
             // 1. Confirmar orden
-            await axios.post(`${apiUrl}cart/confirm?userEmail=${email}`, body, headers);
+            await fetch(`${apiUrl}cart/confirm?userEmail=${email}`, {
+                method: 'POST',
+                headers: {
+                    ...headers?.headers,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
+            }).then(res => res.json());
 
             // 2. Generar link de Mercado Pago
-            const response = await axios.post(`${apiUrl}payment`, {
-                unit_price: Number(totalPurchase.toFixed(2)),
-            });
+            const response = await fetch(`${apiUrl}payment`, {
+                method: 'POST',
+                headers: {
+                    ...headers?.headers,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    unit_price: Number(totalPurchase.toFixed(2)),
+                }),
+            }).then(res => res.json());
 
             if (response.data?.preferenceId) {
                 setPreferenceId(response.data.preferenceId);
@@ -141,6 +188,7 @@ const Cart = () => {
             setLoadingPayment(false);
         }
     };
+
 
     return (
         <div className="w-full py-10 bg-slate-50 md:py-20 px-4 select-none selection:bg-[#7847E0] selection:text-white">
@@ -190,7 +238,7 @@ const Cart = () => {
                             <h3 className="text-lg font-bold text-slate-800 mb-4">You might also like</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {recommendations.map(prod => (
-                                    <div 
+                                    <div
                                         key={prod._id}
                                         onClick={() => navigate(`/products/${prod._id}`)}
                                         className="group flex flex-col justify-between w-full bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden"

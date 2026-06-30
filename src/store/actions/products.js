@@ -1,25 +1,31 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
 import apiUrl from "../../../api";
 
-const products_read = createAsyncThunk('products_read',
-    async (response) => {
+const products_read = createAsyncThunk(
+    "products_read",
+    async (filters, { rejectWithValue }) => {
         try {
-            let token = localStorage.getItem('token')
-            let headers = { headers: { 'Authorization': `Bearer ${token}` } }
-            let response = await fetch(apiUrl + `products?category_id=${response.categoriesCheked.join(',')}&manufacturer_id=${response.manufacturerCheked.join(',')}&order=${response.filterPrice}`, headers)
-            let res = await response.json()
-            return { products: res.products }
+            const token = localStorage.getItem("token");
+            const headers = {
+                Authorization: `Bearer ${token}`,
+            };
+
+            const query = new URLSearchParams({
+                category_id: filters.categoriesCheked.join(","),
+                manufacturer_id: filters.manufacturerCheked.join(","),
+                order: filters.filterPrice,
+            }).toString();
+
+            const res = await fetch(`${apiUrl}products?${query}`, { headers });
+            const data = await res.json();
+
+            return { products: data.products || [] };
         } catch (error) {
-            return {
-                products: []
-            }
+            console.error(error);
+            return rejectWithValue({ products: [] });
         }
-    })
+    }
+);
 
-const actions = { products_read }
-export default actions
-
-
-//let response = await fetch(apiUrl+`products?category_id=${categoriesCheked.join(',')}`, headers) 
-//let res = await response.json()
+const actions = { products_read };
+export default actions;

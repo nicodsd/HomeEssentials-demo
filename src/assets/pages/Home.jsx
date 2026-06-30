@@ -1,100 +1,133 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useCallback } from 'react';
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast, Flip } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import HomeFirstComponent from "../components/HomeIndex/HomeFirstComponent";
 import HomeOfferts from "../components/HomeIndex/HomeOfferts";
 import HomeBuying from "../components/HomeIndex/HomeBuying";
 import HomeCategory from "../components/HomeIndex/HomeCategory";
 import HomeRecommended from "../components/HomeIndex/HomeRecommended";
 import HomeNewArrivals from "../components/HomeIndex/HomeNewArrivals";
-import cards_home from '../../store/actions/cardsHome'
-import favNav_action from '../../store/actions/favNav';
-import { useSelector, useDispatch } from "react-redux";
 import MiddlePhotoSection from "../components/HomeIndex/MiddlePhotoSection";
 import DiscountBanners from "../components/HomeIndex/DiscountBanners";
-import { useNavigate } from "react-router-dom";
 import Brands from "../components/HomeIndex/Brands";
-import axios from '../../utils/fetchWrapper.js';
-import apiUrl from '../../../api';
+
+import cards_home from '../../store/actions/cardsHome';
+import favNav_action from '../../store/actions/favNav';
 import cartNav_action from '../../store/actions/cartNav';
-import { ToastContainer, toast, Flip } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import apiUrl from '../../../api';
 
 const Home = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  let { cards_home_read } = cards_home
+  const { cards_home_read } = cards_home;
   const { cartNav } = cartNav_action;
   const { favNav } = favNav_action;
-  const dispatch = useDispatch()
-  let cards = useSelector(store => store.cardsHome.productsHome).slice(0, 5)
-  const navigate = useNavigate()
-  const redirectToAllProducts = () => {
-    navigate('/allproducts');
-  };
+
+  const allProducts = useSelector(store => store.cardsHome.productsHome);
+  const cards = useMemo(() => allProducts?.slice(0, 5) || [], [allProducts]);
+
   useEffect(() => {
-    if (cards.length === 0) {
-      dispatch(cards_home_read())
+    if (!allProducts || allProducts.length === 0) {
+      dispatch(cards_home_read());
     }
-  }, [])
-  const imageStyle = "h-[100%] w-[100%] object-cover hover:rounded-t-md cursor-pointer";
-  const getStockStatus = (stock) => {
+  }, [dispatch, allProducts, cards_home_read]);
+
+  const redirectToAllProducts = useCallback(() => {
+    navigate('/allproducts');
+  }, [navigate]);
+
+  const getStockStatus = useCallback((stock) => {
     if (stock === 0) return { label: "Out of stock", color: "bg-red-600 text-red-100" };
     if (stock <= 3) return { label: `Only ${stock} left!`, color: "bg-amber-600 text-amber-100" };
     return { label: "In Stock", color: "bg-emerald-700 text-emerald-100" };
-  };
+  }, []);
 
-  const handleAddToCart = (e, product_id) => {
-    e.stopPropagation();
+  const getUserAuth = () => {
     const user = JSON.parse(localStorage.getItem('user')) || null;
     const token = localStorage.getItem('token') || "";
-    const email = user?.email || "";
+    return { email: user?.email || "", token };
+  };
+
+  const handleAddToCart = useCallback(async (e, product_id) => {
+    e.stopPropagation();
+    const { email, token } = getUserAuth();
+
     if (!token) {
       toast.warning("Please sign in to add products to your cart.");
       return;
     }
-    const headers = { headers: { 'authorization': `Bearer ${token}` } };
-    const data = { userEmail: email, productId: product_id };
 
-    axios.post(`${apiUrl}cart/create`, data, headers)
-      .then(res => {
-        const message = Array.isArray(res.data.message) ? res.data.message[0] : res.data.message;
-        toast.success(message || "Added to cart successfully!");
-        axios.get(`${apiUrl}cart/${email}`, headers)
-          .then(cartRes => {
-            dispatch(cartNav({ cart: cartRes.data.response.length }));
-          })
-          .catch(err => console.error(err));
-      })
-      .catch(err => {
-        console.error(err);
-        const errMsg = err.response?.data?.message;
-        toast.error(Array.isArray(errMsg) ? errMsg[0] : errMsg || "Error adding product.");
+    const headers = {
+      'authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      const res = await fetch(`${apiUrl}cart/create`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userEmail: email, productId: product_id })
       });
-  };
+      const data = await res.json();
 
-  const handleAddToFavorites = (e, product_id) => {
+      if (!res.ok) throw new Error(data.message || "Error adding product.");
+
+      const message = Array.isArray(data.message) ? data.message[0] : data.message;
+      toast.success(message || "Added to cart successfully!");
+
+      const cartRes = await fetch(`${apiUrl}cart/${email}`, { headers });
+      const cartData = await cartRes.json();
+      dispatch(cartNav({ cart: cartData.data?.response?.length || 0 }));
+
+    } catch (err) {
+      console.error(err);
+      const errMsg = err.message;
+      toast.error(Array.isArray(errMsg) ? errMsg[0] : errMsg || "Error adding product.");
+    }
+  }, [dispatch, cartNav]);
+
+  const handleAddToFavorites = useCallback(async (e, product_id) => {
     e.stopPropagation();
-    const user = JSON.parse(localStorage.getItem('user')) || null;
-    const token = localStorage.getItem('token') || "";
-    const email = user?.email || "";
+    const { email, token } = getUserAuth();
+
     if (!token) {
       toast.warning("Please sign in to save favorites.");
       return;
     }
-    const headers = { headers: { 'authorization': `Bearer ${token}` } };
-    const data = { userEmail: email, productId: product_id };
-    axios.post(`${apiUrl}favorites`, data, headers)
-      .then(() => {
-        toast.success("Article added to favorites 💜");
-        axios.get(`${apiUrl}favorites?userEmail=${email}`, headers)
-          .then(favRes => {
-            dispatch(favNav({ fav: favRes.data.response.length }));
-          })
-          .catch(err => console.error(err));
-      })
-      .catch(err => {
-        console.error(err);
-        toast.error(err.response?.data?.message || "Error adding to favorites.");
+
+    const headers = {
+      'authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      // 1. Agregar a favoritos
+      const res = await fetch(`${apiUrl}favorites`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userEmail: email, productId: product_id })
       });
-  };
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Error adding to favorites.");
+
+      toast.success("Article added to favorites 💜");
+
+      // 2. Actualizar estado de favoritos
+      const favRes = await fetch(`${apiUrl}favorites?userEmail=${email}`, { headers });
+      const favData = await favRes.json();
+      dispatch(favNav({ fav: favData.data?.response?.length || 0 }));
+
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Error adding to favorites.");
+    }
+  }, [dispatch, favNav]);
+
   return (
     <div className='overflow-hidden bg-gray-200'>
       <div className='bg-gradient-to-br from-white via-[#9538ff3b] to-white flex flex-col gap-3'>
@@ -106,6 +139,7 @@ const Home = () => {
       <div className="h-fit pt-6 min-h-[10vh] bg-white flex flex-col items-center gap-6 pb-16">
         <MiddlePhotoSection />
         <DiscountBanners />
+
         <div className="flex flex-col md:flex-row group/cards justify-center items-center lg:bg-slate-100 h-fit lg:w-[85%] mx-auto p-1 md:p-3 rounded-2xl text-[#000]">
 
           <div className='w-full flex lg:hidden mb-2'>
@@ -122,11 +156,11 @@ const Home = () => {
           </div>
 
           <div className="w-full">
-            {/* Grilla Responsive Optimizada */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 w-full justify-center justify-items-center relative">
               <div className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
               </div>
+
               {cards.map((prod) => {
                 const stockStatus = getStockStatus(prod.stock_Available);
                 return (
@@ -135,7 +169,6 @@ const Home = () => {
                     onClick={() => navigate(`/products/${prod._id}`)}
                     className="group flex flex-col justify-between w-full relative max-w-[260px] bg-white rounded-md border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden"
                   >
-
                     <div className='relative aspect-square w-full bg-slate-50 overflow-hidden'>
                       <img
                         src={prod.photo}
@@ -153,7 +186,6 @@ const Home = () => {
                       </span>
                     </div>
 
-                    {/* Contenido de la Tarjeta */}
                     <div className="p-2 flex flex-col flex-grow justify-between">
                       <h3 className="font-semibold text-slate-800 text-[15px] group-hover:text-[#7847E0] transition-colors leading-none line-clamp-2">
                         {prod.name}
@@ -182,7 +214,7 @@ const Home = () => {
           </div>
 
           <div className="lg:flex hidden flex-col mt-3 lg:mt-8 md:mt-0 justify-center items-center w-1/2">
-            <h3 className="text-2xl hidden md:text-3xl mb-4 md:flex items-center justify-start gap-2 font- text-start">
+            <h3 className="text-2xl hidden md:text-3xl mb-4 md:flex items-center justify-start gap-2 text-start">
               Best Sellers <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="#000" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4" /></svg>
             </h3>
             <p className="text-slate-600 mb-3 lg:mb-6 text-center">Find the best products for you</p>
@@ -196,8 +228,8 @@ const Home = () => {
               </svg>
             </button>
           </div>
-
         </div>
+
         <HomeCategory />
         <HomeRecommended />
         <HomeNewArrivals />

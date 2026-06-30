@@ -3,7 +3,7 @@ import fondo from '../../../../public/images/banners/gemini.png';
 
 const HomeFirstComponent = () => {
   return (
-    <div className='w-full md:w-[85%] border mx-auto md:mt-6 min-h-[200px] md:h-[43vh] flex flex-col md:flex-row md:rounded-2xl relative selection:bg-[#7847E0] selection:text-[#ffe927] overflow-hidden'>
+    <div className='w-full md:w-[87%] border mx-auto md:mt-6 min-h-[200px] md:h-[43vh] flex flex-col md:flex-row md:rounded-2xl relative selection:bg-[#7847E0] selection:text-[#ffe927] overflow-hidden'>
       {/* 📝 BLOQUE IZQUIERDO: Contenido Principal */}
       <div className='w-full md:w-[65%] lg:w-2/4 h-fit md:h-full relative px-6 py-3 md:py-8 sm:px-12 flex flex-col justify-between md:rounded-t-2xl md:rounded-tr-none md:rounded-l-2xl bg-[#ff5500] overflow-hidden z-10'>
         {/* Contenedor superior para Tag y Título */}

@@ -1,5 +1,4 @@
 import { useEffect, useState} from "react";
-import axios from '../../utils/fetchWrapper.js';
 import apiUrl from "../../../api"
 import { uploadFile } from "../../../firebase";
 import Grid from "react-loading-icons/dist/esm/components/grid";
@@ -10,7 +9,8 @@ import { useNavigate } from "react-router-dom";
 const UserPanel = () => {
   let navigate=useNavigate()
   const [infoUser, setInfoUser] = useState(null) 
-  const user = JSON.parse(localStorage.getItem("user"))
+  const userString = localStorage.getItem("user");
+  const user = userString && userString !== "undefined" ? JSON.parse(userString) : null;
   const token = localStorage.getItem("token");
   let headers = { headers: { 'authorization': `Bearer ${token}` } }
 
@@ -42,9 +42,9 @@ const UserPanel = () => {
 
     let token = () => localStorage.getItem('token')
     let headers = { headers: { 'authorization': `Bearer ${token()}` } }
-    axios.post(apiUrl + `users/${infoUser._id}`, data, headers).then(res => {
-      setInfoUser(res.data.response)
-      toast.success(res.data.message, {
+    fetch(apiUrl + `users/${infoUser._id}`, { ...headers, method: 'POST', body: JSON.stringify(data), headers: { ...headers?.headers, 'Content-Type': 'application/json' } }).then(res => res.json()).then(res => {
+      setInfoUser(res.response)
+      toast.success(res.message, {
         theme: "colored",
       })
     }).catch(err => console.log(err))

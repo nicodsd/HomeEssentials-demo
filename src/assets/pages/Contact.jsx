@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from '../../utils/fetchWrapper.js';
 import apiUrl from "../../../api";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";

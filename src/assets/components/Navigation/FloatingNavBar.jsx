@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link as Anchor, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import axios from '../../../utils/fetchWrapper.js';
 import apiUrl from "../../../../api";
 
 import categories_actions from "../../../store/actions/categories";
@@ -41,7 +40,8 @@ const FloatingNavBar = ({ isScrolled }) => {
     const [manufacturerChecked, setManufacturerChecked] = useState([]);
 
     // Obtención del usuario y token (Redux con fallback a LocalStorage)
-    const userFallback = JSON.parse(localStorage.getItem("user")) || {};
+    const userString = localStorage.getItem("user");
+    const userFallback = userString && userString !== "undefined" ? JSON.parse(userString) : {};
     const tokenCurrent = userLogin.token || localStorage.getItem("token");
     const userCurrent = userLogin.user?.name ? userLogin.user : userFallback;
     const email = userCurrent?.email;
@@ -76,7 +76,7 @@ const FloatingNavBar = ({ isScrolled }) => {
 
     const handleSignOut = () => {
         const headers = { headers: { authorization: `Bearer ${tokenCurrent}` } };
-        axios.post(`${apiUrl}auth/signout`, { email }, headers)
+        fetch(`${apiUrl}auth/signout`, { ...headers, method: 'POST', body: JSON.stringify({ email }), headers: { ...headers?.headers, 'Content-Type': 'application/json' } }).then(res => res.json())
             .finally(() => {
                 localStorage.clear();
                 dispatch(SaveUserLogin({ token: "", user: {} }));
@@ -178,12 +178,12 @@ const FloatingNavBar = ({ isScrolled }) => {
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
                                     <div className="absolute right-0 mt-3 w-40 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-20 animate-fadeIn text-xs">
-                                        <button onClick={() => { navigate("/userPanel"); setDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium">👤 User Panel</button>
+                                        <button onClick={() => { navigate("/userPanel"); setDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium">User Panel</button>
                                         {(role === 1 || role === 2) && (
-                                            <button onClick={() => { navigate("/admin/products"); setDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-indigo-600 hover:bg-indigo-50/50 font-semibold">⚡ Admin Panel</button>
+                                            <button onClick={() => { navigate("/admin/products"); setDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-indigo-600 hover:bg-indigo-50/50 font-semibold">Admin Panel</button>
                                         )}
                                         <hr className="border-slate-100 my-1" />
-                                        <button onClick={handleSignOut} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 font-medium">🚪 Sign Out</button>
+                                        <button onClick={handleSignOut} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 font-medium">Sign Out</button>
                                     </div>
                                 </>
                             )}

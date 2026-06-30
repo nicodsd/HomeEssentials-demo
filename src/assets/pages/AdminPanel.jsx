@@ -1,4 +1,3 @@
-import axios from '../../utils/fetchWrapper.js';
 import apiUrl from '../../api';
 import { useState, useEffect } from 'react';
 
@@ -8,8 +7,8 @@ export default function AdminPanel() {
 
     useEffect(() => {
         Promise.all([
-            axios(apiUrl + 'users'),
-            axios(apiUrl + 'categories')
+            fetch(apiUrl + 'users').then(res => res.json()),
+            fetch(apiUrl + 'categories').then(res => res.json())
         ])
             .then(([usersRes, categoriesRes]) => {
                 setUser(usersRes.data.users);
