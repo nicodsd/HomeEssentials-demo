@@ -21,6 +21,7 @@ export default function ProductDetail() {
   // Inicialización correcta como objeto vacío
   const [prodOne, setProdOne] = useState({});
   const [selectedColor, setSelectedColor] = useState("green");
+  const [isAdded, setIsAdded] = useState(false);
 
   // Auth local fallbacks unificados
   const user = JSON.parse(localStorage.getItem('user')) || null;
@@ -31,13 +32,17 @@ export default function ProductDetail() {
   // Traer el detalle del producto al cargar el ID
   useEffect(() => {
     fetch(`${apiUrl}products/${id}`)
+      .then(res => res.json())
       .then(res => {
         const productData = res.response;
-        setProdOne(productData);
-        dispatch(productOne({
-          name: productData.name, photo: productData.photo,
-          description: productData.description
-        }).then(res => res.json()));
+        if (productData) {
+          setProdOne(productData);
+          dispatch(productOne({
+            name: productData.name,
+            photo: productData.photo,
+            description: productData.description
+          }));
+        }
       })
       .catch(err => console.error("Error fetching product data:", err));
   }, [id, dispatch, productOne]);
@@ -55,11 +60,14 @@ export default function ProductDetail() {
       .then(res => {
         const message = Array.isArray(res.message) ? res.message[0] : res.message;
         toast.success(message || "Added to cart successfully!");
+        setIsAdded(true);
+        setTimeout(() => setIsAdded(false), 2500);
 
         // Re-sincronizar el número total del carrito global
         fetch(`${apiUrl}cart/${email}`, headers).then(res => res.json())
           .then(cartRes => {
-            dispatch(cartNav({ cart: cartRes.data.response.length }));
+            const cartItems = cartRes.response ? cartRes.response.length : 0;
+            dispatch(cartNav({ cart: cartItems }));
           })
           .catch(err => console.error(err));
       })
@@ -95,6 +103,18 @@ export default function ProductDetail() {
 
   // Cálculo seguro del plan de cuotas mensuales
   const monthlyInstallments = prodOne.price ? (prodOne.price / 12).toFixed(2) : "0.00";
+  const [zoomProps, setZoomProps] = useState({ transformOrigin: '50% 50%', isZoomed: false });
+
+  const handleMouseMove = (e) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - left) / width) * 100;
+    const y = ((e.clientY - top) / height) * 100;
+    setZoomProps({ transformOrigin: `${x}% ${y}%`, isZoomed: true });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomProps({ transformOrigin: '50% 50%', isZoomed: false });
+  };
 
   return (
     <section className="w-full bg-white text-slate-800 min-h-screen selection:bg-[#7847E0] selection:text-white">
@@ -102,13 +122,12 @@ export default function ProductDetail() {
 
         {/* Título de Producto & Breadcrumbs simulado */}
         <div className="mb-6">
-          <span className="text-xs font-bold text-indigo-600 tracking-wider uppercase">Product Detail</span>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mt-1 lg:text-4xl">
-            {prodOne.name || "Loading product..."}
-          </h1>
           <p className="mt-2 text-xs font-semibold text-slate-400 bg-slate-100 w-fit px-2 py-1 rounded">
             SKU: #PROD-{id?.slice(-6).toUpperCase()}
           </p>
+          <h1 className="text-3xl text-slate-900 tracking-tight mt-1 lg:text-4xl">
+            {prodOne.name || "Loading product..."}
+          </h1>
         </div>
 
         {/* Distribución en grilla moderna */}
@@ -116,14 +135,19 @@ export default function ProductDetail() {
 
           {/* Bloque Izquierdo: Galería de Imágenes (Ocupa 3 de 5 columnas) */}
           <div className="lg:col-span-3 space-y-4">
-            <div className="relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 shadow-sm aspect-[4/3] max-h-[500px]">
+            <div
+              className="relative overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 shadow-sm aspect-[4/3] max-h-[500px] cursor-zoom-in"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
               <img
                 alt={prodOne.name}
                 src={prodOne.photo}
-                className="h-full w-full object-contain mx-auto transition-transform duration-300 hover:scale-105"
+                style={{ transformOrigin: zoomProps.transformOrigin }}
+                className={`h-full w-full object-contain mx-auto transition-transform duration-200 ${zoomProps.isZoomed ? 'scale-[2.5]' : 'scale-100'}`}
               />
 
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full bg-slate-900/80 backdrop-blur-sm px-4 py-1.5 text-white shadow-sm pointer-events-none">
+              <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full bg-slate-900/80 backdrop-blur-sm px-4 py-1.5 text-white shadow-sm pointer-events-none transition-opacity duration-300 ${zoomProps.isZoomed ? 'opacity-0' : 'opacity-100'}`}>
                 <svg className="h-3.5 w-3.5 text-indigo-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -205,9 +229,18 @@ export default function ProductDetail() {
               <button
                 type="button"
                 onClick={() => addProduct(prodOne._id)}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wider text-white bg-orange-500 hover:bg-orange-600 shadow-md shadow-orange-100 active:scale-[0.99] transition-all transform"
+                disabled={isAdded}
+                className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wider text-white shadow-md active:scale-[0.99] transition-all transform ${isAdded ? 'bg-green-500 hover:bg-green-600 shadow-green-100' : 'bg-orange-500 hover:bg-orange-600 shadow-orange-100'}`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-shopping-cart-icon lucide-shopping-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" /></svg>Add to cart
+                {isAdded ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="lucide lucide-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>Added!
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="lucide lucide-shopping-cart-icon lucide-shopping-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" /></svg>Add to cart
+                  </>
+                )}
               </button>
             </div>
           </div>

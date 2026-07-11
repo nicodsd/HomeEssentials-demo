@@ -1,6 +1,6 @@
 const FeaturesBanner = () => {
   return (
-    <div className="w-full bg-white mt-10 border-b selection:bg-[#7847E0] selection:text-[#ffe927]">
+    <div className="w-full bg-white border-b selection:bg-[#7847E0] selection:text-[#ffe927]">
       {/* Contenedor Principal: flex-row en móviles para que estén lado a lado */}
       <div className="mx-auto w-full md:w-[85%] flex flex-row justify-between md:justify-center items-start lg:items-center px-2 py-4 sm:gap-8 lg:gap-20">
 

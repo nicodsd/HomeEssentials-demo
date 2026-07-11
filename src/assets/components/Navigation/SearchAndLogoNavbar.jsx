@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import categories_actions from '../../../store/actions/categories';
 import userLogin_action from '../../../store/actions/userLogin_action';
 import favNav_action from '../../../store/actions/favNav';
+import cartNav_action from '../../../store/actions/cartNav';
 import Favourites from "./Favourites.jsx";
 import SearchBar from "./SearchBar";
 import Carrito from "./Carrito";
@@ -14,6 +15,7 @@ import { getSafeUser } from '../../../utils/authUtils';
 
 const { SaveUserLogin } = userLogin_action;
 const { favNav } = favNav_action;
+const { cartNav } = cartNav_action;
 
 const SearchAndLogoNavbar = () => {
   const { categories_read } = categories_actions;
@@ -55,6 +57,10 @@ const SearchAndLogoNavbar = () => {
     if (email && tokenCurrent) {
       const headers = { headers: { 'authorization': `Bearer ${tokenCurrent}` } };
       fetch(`${apiUrl}cart/${email}`, headers).then(res => res.json())
+        .then(res => {
+          const cartItems = res.response ? res.response.length : 0;
+          dispatch(cartNav({ cart: cartItems }));
+        })
         .catch(err => console.error("Error fetching cart data:", err));
 
       fetch(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => res.json())
@@ -67,18 +73,25 @@ const SearchAndLogoNavbar = () => {
     boolean ? setSeeButtonsUser(false) : setSeeButtonsUser(true);
   };
 
-  const handleSignOut = () => {
-    const headers = { headers: { 'authorization': `Bearer ${tokenCurrent}` } };
-    fetch(`${apiUrl}auth/signout`, { ...headers, method: 'POST', body: JSON.stringify({ email }), headers: { ...headers?.headers, 'Content-Type': 'application/json' } }).then(res => res.json())
-      .finally(() => {
+  const handleSignOut = async () => {
+    try {
+      const res = await fetch(`${apiUrl}auth/signout?email=${email}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
         localStorage.clear();
         dispatch(SaveUserLogin({ token: "", user: {} }));
         setDropdownOpen(false);
         setMenuIsOpen(false);
         navigate('/');
-      })
-      .catch(err => alert(err));
-  };
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
     <>
@@ -152,7 +165,7 @@ const SearchAndLogoNavbar = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60 60 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0" />
               </svg>
               {count.cart > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-[#7847E0] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm animate-bounce">
+                <span className="absolute -top-0.5 -right-0.5 bg-[#7847E0] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
                   {count.cart}
                 </span>
               )}

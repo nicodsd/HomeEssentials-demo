@@ -38,7 +38,7 @@ const AllProducts = () => {
   const [sortPrice, setSortPrice] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 30;
 
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -317,7 +317,7 @@ const AllProducts = () => {
       )}
 
       {/* --- CONTENEDOR PRINCIPAL DOS COLUMNAS --- */}
-      <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-10 md:py-10 flex gap-8 items-start'>
+      <div className='w-full mx-auto px-1 sm:px-6 lg:px-8 pt-2 pb-10 md:py-10 flex gap-8 items-start'>
 
         {/* 1. SIDEBAR ASIDE (Solo visible en Desktop/Tablet) */}
         <aside className="hidden md:block w-[240px] xl:w-[280px] p-1 pb-10 sticky overflow-y-auto h-[calc(100vh-100px)] top-6 shrink-0">
@@ -341,7 +341,7 @@ const AllProducts = () => {
             </div>
           ) : (
             <div className='flex flex-col gap-6 w-full'>
-              <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-1.5 justify-items-center'>
+              <div className='grid grid-cols-3 md:grid-cols-3 lg:grid-cols-10 xl:grid-cols-11 gap-0.5 justify-items-center'>
                 {paginatedProducts.map((prod) => {
                   const stockStatus = getStockStatus(prod.stock_Available);
                   return (
@@ -354,22 +354,19 @@ const AllProducts = () => {
                         <img
                           src={prod.photo}
                           alt={prod.name}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="h-full w-full object-cover transition-transform duration-300"
                         />
 
-                        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-                          <div className="flex gap-1.5 flex-wrap">
-                            <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full ${stockStatus.color}`}>
+                        <div className="absolute top-1 left-1 right-1 flex justify-between items-start z-10">
+                          <div className="flex gap-1 flex-wrap">
+                            <span className={`text-[10px] font-bold px-1 py-0.5 rounded-full ${stockStatus.color}`}>
                               {stockStatus.label}
-                            </span>
-                            <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-600 text-blue-100 shadow-sm">
-                              NEW
                             </span>
                           </div>
 
                           <button
                             onClick={(e) => handleAddToFavorites(e, prod._id)}
-                            className="text-slate-900 hover:text-red-500 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm transition-colors"
+                            className="text-slate-900 hover:text-red-500 bg-white/80 backdrop-blur-sm rounded-full p-1 shadow-sm transition-colors"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12" />
@@ -378,20 +375,23 @@ const AllProducts = () => {
                         </div>
                       </div>
 
-                      <div className="p-2 flex flex-col flex-grow justify-between">
-                        <h3 className="font-semibold text-slate-800 text-[15px] group-hover:text-[#7847E0] transition-colors leading-none line-clamp-2">
-                          {prod.name}
-                        </h3>
-                        <p className="text-[11px] mt-1 text-slate-600 line-clamp-3">{prod.description}</p>
-                        <div className="flex items-end justify-between mt-2">
+                      <div className="p-1 flex flex-col flex-grow justify-between">
+                        <div className="flex flex-col">
+                          <h3 className="font-semibold text-slate-800 text-[11px] group-hover:text-[#7847E0] transition-colors leading-none line-clamp-2">
+                            {prod.name}
+                          </h3>
+                          <p className="text-[10px] mt-1 leading-none text-slate-500 line-clamp-3">{prod.description}</p>
+                        </div>
+
+                        <div className="flex items-end mt-1 justify-between">
                           <div className="flex flex-col">
-                            <span className="font-semibold text-lg sm:text-xl text-[#0e0424]">${" "}
+                            <span className="font-medium text-lg tracking-tight text-[#0e0424]">${" "}
                               {Intl.NumberFormat('en-US', { currency: 'USD' }).format(prod.price)}
                             </span>
                           </div>
                           <div
                             onClick={(e) => handleAddToCart(e, prod._id)}
-                            className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-[#7847E0] flex items-center justify-center transition-colors shadow-sm shrink-0"
+                            className="w-6 h-6 rounded-full bg-slate-50 group-hover:bg-[#7847E0] flex items-center justify-center transition-colors shadow-sm shrink-0"
                           >
                             <svg fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4 text-slate-600 group-hover:text-white transition-colors" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -417,7 +417,7 @@ const AllProducts = () => {
                   >
                     Previous
                   </button>
-                  <span className="text-sm font-bold text-slate-700 bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
+                  <span className="text-sm font-bold text-slate-700 bg-white px-4 py-2 ">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button

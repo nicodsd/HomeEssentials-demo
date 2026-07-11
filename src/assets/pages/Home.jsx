@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast, Flip } from 'react-toastify';
@@ -13,6 +13,7 @@ import HomeNewArrivals from "../components/HomeIndex/HomeNewArrivals";
 import MiddlePhotoSection from "../components/HomeIndex/MiddlePhotoSection";
 import DiscountBanners from "../components/HomeIndex/DiscountBanners";
 import Brands from "../components/HomeIndex/Brands";
+import Newsletter from "../components/HomeIndex/Newsletter";
 
 import cards_home from '../../store/actions/cardsHome';
 import favNav_action from '../../store/actions/favNav';
@@ -28,7 +29,22 @@ const Home = () => {
   const { favNav } = favNav_action;
 
   const allProducts = useSelector(store => store.cardsHome.productsHome);
-  const cards = useMemo(() => allProducts?.slice(0, 5) || [], [allProducts]);
+  const cards = useMemo(() => allProducts || [], [allProducts]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextSlide = useCallback(() => {
+    if (currentIndex + 4 < cards.length) {
+      setCurrentIndex(currentIndex + 4);
+    }
+  }, [currentIndex, cards.length]);
+
+  const prevSlide = useCallback(() => {
+    if (currentIndex - 4 >= 0) {
+      setCurrentIndex(currentIndex - 4);
+    }
+  }, [currentIndex]);
+
+  const displayedCards = useMemo(() => cards.slice(currentIndex, currentIndex + 4), [cards, currentIndex]);
 
   useEffect(() => {
     if (!allProducts || allProducts.length === 0) {
@@ -130,13 +146,13 @@ const Home = () => {
 
   return (
     <div className='overflow-hidden bg-gray-200'>
-      <div className='bg-gradient-to-br from-white via-[#9538ff3b] to-white flex flex-col gap-3'>
+      <div className='bg-gradient-to-br from-white via-[#f0deff71] to-white flex flex-col gap-1 md:gap-3'>
         <HomeFirstComponent />
-        <HomeNewArrivals />
         <HomeOfferts />
+        <HomeNewArrivals />
         <HomeBuying />
       </div>
-      <div className="h-fit pt-6 min-h-[10vh] bg-white flex flex-col items-center gap-6 pb-16">
+      <div className="h-fit pt-6 min-h-[10vh] bg-white flex flex-col items-center gap-6 lg:pb-16">
         <MiddlePhotoSection />
         <DiscountBanners />
 
@@ -156,44 +172,65 @@ const Home = () => {
           </div>
 
           <div className="w-full">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 w-full justify-center justify-items-center relative">
-              <div className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-1 w-full justify-center justify-items-center relative">
+              {/* Botón Izquierda */}
+              {currentIndex > 0 && (
+                <div onClick={prevSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -left-8 top-1/2 bottom-1/2 my-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100 rotate-180' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                </div>
+              )}
 
-              {cards.map((prod) => {
+              {/* Botón Derecha */}
+              {currentIndex + 4 < cards.length && (
+                <div onClick={nextSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+                </div>
+              )}
+
+              {displayedCards.map((prod) => {
                 const stockStatus = getStockStatus(prod.stock_Available);
                 return (
                   <div
                     key={prod._id}
                     onClick={() => navigate(`/products/${prod._id}`)}
-                    className="group flex flex-col justify-between w-full relative max-w-[260px] bg-white rounded-md border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden"
+                    className="group flex flex-col justify-between w-full bg-white rounded-md border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden"
                   >
-                    <div className='relative aspect-square w-full bg-slate-50 overflow-hidden'>
+                    <div className='relative aspect-square w-full bg-slate-50 overflow-hidden group'>
                       <img
                         src={prod.photo}
                         alt={prod.name}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                      <button
-                        onClick={(e) => handleAddToFavorites(e, prod._id)}
-                        className="absolute top-3 right-3 text-slate-900 hover:text-red-500 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm transition-colors z-10"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12" /></svg>
-                      </button>
-                      <span className={`absolute top-3 left-3 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full ${stockStatus.color}`}>
-                        {stockStatus.label}
-                      </span>
+
+                      <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
+                        <div className="flex gap-1 flex-wrap">
+                          <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full ${stockStatus.color}`}>
+                            {stockStatus.label}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={(e) => handleAddToFavorites(e, prod._id)}
+                          className="text-slate-900 hover:text-red-500 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="p-2 flex flex-col flex-grow justify-between">
-                      <h3 className="font-semibold text-slate-800 text-[15px] group-hover:text-[#7847E0] transition-colors leading-none line-clamp-2">
-                        {prod.name}
-                      </h3>
-                      <p className="text-[11px] mt-1 text-slate-600 line-clamp-3">{prod.description}</p>
-                      <div className="flex items-end justify-between mt-2">
+                      <div className="flex flex-col">
+                        <h3 className="font-semibold text-slate-800 text-[13px] group-hover:text-[#7847E0] transition-colors leading-tight line-clamp-2">
+                          {prod.name}
+                        </h3>
+                        <p className="text-[10px] mt-1 text-slate-500 line-clamp-3">{prod.description}</p>
+                      </div>
+
+                      <div className="flex items-end justify-between mt-3">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-lg sm:text-xl text-[#0e0424]">${" "}
+                          <span className="font-semibold text-lg tracking-tight sm:text-xl text-[#0e0424]">${" "}
                             {Intl.NumberFormat('en-US', { currency: 'USD' }).format(prod.price)}
                           </span>
                         </div>
@@ -233,6 +270,7 @@ const Home = () => {
         <HomeCategory />
         <HomeRecommended />
         <HomeNewArrivals />
+        <Newsletter />
         <Brands />
       </div>
       <ToastContainer transition={Flip} position="bottom-right" autoClose={2000} hideProgressBar theme="light" />

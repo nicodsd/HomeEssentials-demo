@@ -6,7 +6,8 @@ import cartNav_action from '../../../store/actions/cartNav';
 import { toast } from 'react-toastify';
 
 const HomeNewArrivals = () => {
-  const [newProducts, setNewProducts] = useState([]);
+  const [allProductsList, setAllProductsList] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { cartNav } = cartNav_action;
@@ -19,9 +20,8 @@ const HomeNewArrivals = () => {
         const data = await response.json();
         const allProducts = data.products || [];
 
-        // Invertimos el array para simular "nuevos ingresos" y tomamos 5
-        const latestProducts = [...allProducts].reverse().slice(0, 5);
-        setNewProducts(latestProducts);
+        const latestProducts = [...allProducts].reverse();
+        setAllProductsList(latestProducts);
       } catch (error) {
         console.error("Error fetching new arrivals", error);
       }
@@ -38,6 +38,20 @@ const HomeNewArrivals = () => {
   const redirectToAllProducts = () => {
     navigate('/allproducts');
   };
+
+  const nextSlide = () => {
+    if (currentIndex + 6 < allProductsList.length) {
+      setCurrentIndex(currentIndex + 6);
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentIndex - 6 >= 0) {
+      setCurrentIndex(currentIndex - 6);
+    }
+  };
+
+  const displayedProducts = allProductsList.slice(currentIndex, currentIndex + 6);
 
   // Handler: Agregar al Carrito
   const handleAddToCart = async (e, product_id) => {
@@ -90,19 +104,19 @@ const HomeNewArrivals = () => {
     toast.info("Added to favorites! 💜");
   };
 
-  if (newProducts.length === 0) return null;
+  if (allProductsList.length === 0) return null;
 
   return (
     <div className="flex flex-col md:flex-row group/cards justify-center items-center lg:bg-slate-100 h-fit lg:w-[85%] mx-auto p-1 md:p-3 rounded-2xl text-[#000]">
 
       {/* Cabecera Mobile */}
-      <div className='w-full flex lg:hidden mb-2'>
-        <h2 className="text-lg md:text-3xl flex w-full lg:w-fit lg:hidden items-center justify-start gap-1 ml-2 font-bold text-start">
+      <div className='w-full flex justify-between items-center lg:hidden p-2'>
+        <h2 className="text-lg md:text-3xl flex lg:w-fit lg:hidden items-center justify-start font-bold text-start">
           New Products
         </h2>
         <button
           onClick={redirectToAllProducts}
-          className="text-[#5f41a0] text-sm font-bold transition-all duration-300 transform active:scale-95 pr-2"
+          className="text-black text-sm font-bold transition-all duration-300 transform active:scale-95"
         >
           See all
         </button>
@@ -110,20 +124,29 @@ const HomeNewArrivals = () => {
 
       {/* Grilla de Productos */}
       <div className="w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 w-full justify-center justify-items-center relative">
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap- w-full justify-center justify-items-center relative">
 
-          {/* Icono Flotante (Decorativo/Slider) */}
-          <div className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
-          </div>
+          {/* Botón Izquierda */}
+          {currentIndex > 0 && (
+            <div onClick={prevSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -left-8 top-1/2 bottom-1/2 my-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100 rotate-180' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+            </div>
+          )}
 
-          {newProducts.map((prod) => {
+          {/* Botón Derecha */}
+          {currentIndex + 6 < allProductsList.length && (
+            <div onClick={nextSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
+            </div>
+          )}
+
+          {displayedProducts.map((prod) => {
             const stockStatus = getStockStatus(prod.stock_Available);
             return (
               <div
                 key={prod._id}
                 onClick={() => navigate(`/products/${prod._id}`)}
-                className="group flex flex-col justify-between w-full max-w-[260px] bg-white rounded-md border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden"
+                className="group flex flex-col justify-between w-full bg-white rounded-md border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden"
               >
                 <div className='relative aspect-square w-full bg-slate-50 overflow-hidden group'>
                   <img
@@ -133,11 +156,11 @@ const HomeNewArrivals = () => {
                   />
 
                   <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-                    <div className="flex gap-1.5 flex-wrap">
-                      <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full ${stockStatus.color}`}>
+                    <div className="flex gap-1 flex-wrap">
+                      <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full ${stockStatus.color}`}>
                         {stockStatus.label}
                       </span>
-                      <span className="text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-600 text-blue-100 shadow-sm">
+                      <span className="text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-full bg-blue-600 text-blue-100 shadow-sm">
                         NEW
                       </span>
                     </div>
@@ -153,16 +176,18 @@ const HomeNewArrivals = () => {
                   </div>
                 </div>
 
-                <div className="p-3 flex flex-col flex-grow justify-between">
-                  <h3 className="font-semibold text-slate-800 text-[13px] sm:text-[15px] group-hover:text-[#7847E0] transition-colors leading-tight line-clamp-2">
-                    {prod.name}
-                  </h3>
-                  <p className="text-[11px] mt-1 text-slate-500 line-clamp-2">{prod.description}</p>
+                <div className="p-2 flex flex-col flex-grow justify-between">
+                  <div className="flex flex-col">
+                    <h3 className="font-semibold text-slate-800 text-[13px] group-hover:text-[#7847E0] transition-colors leading-tight line-clamp-2">
+                      {prod.name}
+                    </h3>
+                    <p className="text-[10px] mt-1 text-slate-500 line-clamp-3">{prod.description}</p>
+                  </div>
 
                   <div className="flex items-end justify-between mt-3">
                     <div className="flex flex-col">
-                      <span className="font-bold text-base sm:text-lg text-[#0e0424]">
-                        {Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(prod.price)}
+                      <span className="font-semibold text-lg tracking-tight sm:text-xl text-[#0e0424]">${" "}
+                        {Intl.NumberFormat('en-US', { currency: 'USD' }).format(prod.price)}
                       </span>
                     </div>
                     <div

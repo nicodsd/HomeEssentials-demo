@@ -85,18 +85,18 @@ const HomeOfferts = () => {
       </div>
 
       {/* 🖥️ VISTA DESKTOP: Mantiene la hermosa grilla dual de 2 columnas pero con esteroides UI */}
-      <div className='hidden xl:flex justify-between gap-4 w-full lg:w-[70%] mx-auto h-[12vw] min-h-[200px]'>
+      <div className='hidden xl:flex justify-between gap-3 w-full lg:w-[85%] mx-auto h-[12vw] min-h-[200px]'>
         {slides.map((slide) => (
           <div
             key={slide.id}
-            className='flex items-center p-8 border border-gray-300 hover:border-transparent hover:shadow-[0_20px_45px_rgba(0,0,0,0.08)] h-full w-full bg-cover bg-center rounded-2xl transition-all duration-300 transform relative overflow-hidden'
+            className='flex items-center p-8 border border-gray-300 h-full w-full bg-cover bg-center rounded-2xl transition-all duration-300 transform relative overflow-hidden'
             style={{ backgroundImage: `url('${slide.bgImage}')` }}
           >
-            <div className={`w-[70%] gap-4 flex flex-col relative z-10 ${slide.textColor}`}>
+            <div className={`w-[60%] gap-4 flex flex-col relative z-10 ${slide.textColor}`}>
               <span className={`text-sm font-bold tracking-wider uppercase ${slide.tagColor}`}>
                 {slide.tag}
               </span>
-              <h2 className='font-semibold w-[60%] text-3xl lg:text-4xl xl:text-[2.3vw] leading-tight'>
+              <h2 className='w-[80%] text-3xl lg:text-4xl xl:text-[2.3vw] tracking-tight leading-none'>
                 {slide.title}
               </h2>
               <button className={`w-[40%] lg:w-[35%] py-3 rounded-xl font-bold text-sm shadow-sm transition-all transform active:scale-95 hover:scale-105 mt-2 ${slide.btnClass}`}>

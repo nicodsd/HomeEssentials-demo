@@ -12,8 +12,10 @@ import Favourites from "./Favourites.jsx";
 import SearchBar from "./SearchBar";
 import Carrito from "./Carrito";
 import logo from "../../../../public/images/Logos/logo-2-b.png";
+import { getSafeUser } from '../../../utils/authUtils';
 
 const { SaveUserLogin } = userLogin_action;
+const { favNav } = favNav_action;
 
 const FloatingNavBar = ({ isScrolled }) => {
     const dispatch = useDispatch();
@@ -40,8 +42,7 @@ const FloatingNavBar = ({ isScrolled }) => {
     const [manufacturerChecked, setManufacturerChecked] = useState([]);
 
     // Obtención del usuario y token (Redux con fallback a LocalStorage)
-    const userString = localStorage.getItem("user");
-    const userFallback = userString && userString !== "undefined" ? JSON.parse(userString) : {};
+    const userFallback = getSafeUser();
     const tokenCurrent = userLogin.token || localStorage.getItem("token");
     const userCurrent = userLogin.user?.name ? userLogin.user : userFallback;
     const email = userCurrent?.email;
@@ -73,6 +74,27 @@ const FloatingNavBar = ({ isScrolled }) => {
             filterPrice: 1
         }));
     }, [categoriesChecked, manufacturerChecked, dispatch, products_read]);
+
+    useEffect(() => {
+        if (email && tokenCurrent) {
+            const headers = { headers: { authorization: `Bearer ${tokenCurrent}` } };
+            fetch(`${apiUrl}cart/${email}`, headers).then(res => res.json())
+                .catch(err => console.error("Error fetching cart data:", err));
+
+            fetch(`${apiUrl}favorites?userEmail=${email}`, headers).then(res => res.json())
+                .then(res => dispatch(favNav({ fav: res.response.length })))
+                .catch(err => console.error("Error fetching favorites data:", err));
+        }
+    }, [email, tokenCurrent, dispatch, favNav]);
+
+    useEffect(() => {
+        if (!isScrolled) {
+            setFavOpen(false);
+            setCartOpen(false);
+            setDropdownOpen(false);
+            setActivePanel(null);
+        }
+    }, [isScrolled]);
 
     const handleSignOut = () => {
         const headers = { headers: { authorization: `Bearer ${tokenCurrent}` } };

@@ -40,20 +40,25 @@ export default function Signin() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(dataUser)
-      }).then(res => res.json());
+      })
 
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
+      const dataUserResponse = await res.json();
 
-      dispatch(SaveUserLogin({
-        token: res.token,
-        user: res.user
-      }));
+      if (dataUserResponse.success) {
+        localStorage.setItem("token", dataUserResponse.token);
+        localStorage.setItem("user", JSON.stringify(dataUserResponse.user));
 
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
+        dispatch(SaveUserLogin({
+          token: dataUserResponse.token,
+          user: dataUserResponse.user
+        }));
 
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
+      } else {
+        alert(dataUserResponse.message);
+      }
     } catch (err) {
       console.error(err);
       const errorMsg = err.message || "Invalid email or password.";

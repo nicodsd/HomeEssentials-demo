@@ -25,22 +25,22 @@ export default function DiscountBanners() {
     ];
 
     return (
-        <div className="h-[10vh] w-[80%] grid grid-cols-2 gap-4">
+        <div className="lg:h-[8vh] w-full p-2 lg:w-[85%] grid grid-cols-2 gap-2">
             {banners.map((banner) => (
                 <div
                     key={banner.id}
                     onClick={() => navigate('/allproducts')}
-                    className="group hover:scale-[1.01] bg-white transition-all duration-200 cursor-pointer flex rounded-xl h-full overflow-hidden"
+                    className="group hover:scale-[1.01] flex-col lg:flex-row lg:bg-white transition-all duration-200 w-full justify-center items-center lg:h-full bg-[#ffc445] cursor-pointer flex rounded-md lg:rounded-xl overflow-hidden"
                 >
                     {/* Imagen */}
                     <img
                         src={banner.image}
                         alt={banner.alt}
-                        className="w-40 sm:w-56 h-full object-cover bg-[#ffc445]"
+                        className="w-20 sm:w-24 h-auto lg:h-full object-cover lg:bg-[#ffc445]"
                     />
 
                     {/* Contenido de texto */}
-                    <div className={`text-white flex-1 pl-6 sm:pl-12 ${banner.bgColor} flex flex-col justify-center`}>
+                    <div className={`text-white h-full flex-1 h-34 w-full pl-2 pb-2 lg:pb-0 lg:pl-3 sm:pl-12 ${banner.bgColor} flex flex-col justify-center`}>
                         <h4 className={`${banner.textSize} text-[#ffc445] font-bold leading-tight`}>
                             {banner.discount}
                         </h4>

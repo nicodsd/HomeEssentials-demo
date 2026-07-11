@@ -40,7 +40,6 @@ function Carrito({ openModal, onCloseModal }) {
     if (openModal) fetchProducts();
   }, [openModal, fetchProducts]);
 
-  // Eliminar producto
   const deleteProduct = async (product_id) => {
     try {
       const res = await fetch(
@@ -49,6 +48,32 @@ function Carrito({ openModal, onCloseModal }) {
       );
       const data = await res.json();
       toast.error(data.message?.[0] || 'Product removed', { theme: 'colored' });
+      fetchProducts();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addProduct = async (product_id) => {
+    try {
+      await fetch(`${apiUrl}cart/create`, {
+        method: 'POST',
+        headers: { ...headers.headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail: email, productId: product_id }),
+      });
+      fetchProducts();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const subtractProduct = async (product_id) => {
+    try {
+      await fetch(`${apiUrl}cart/subtract`, {
+        method: 'PUT',
+        headers: { ...headers.headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail: email, productId: product_id }),
+      });
       fetchProducts();
     } catch (err) {
       console.error(err);
@@ -115,9 +140,11 @@ function Carrito({ openModal, onCloseModal }) {
                               </p>
                             </div>
                             <div className="flex flex-1 items-end justify-between text-sm mt-2">
-                              <p className="text-slate-500 font-medium">
-                                Qty: {product.quantity}
-                              </p>
+                              <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 h-7 w-20 overflow-hidden">
+                                <button type="button" className="w-1/3 text-xs font-bold hover:bg-slate-200 h-full text-slate-600 flex items-center justify-center" onClick={() => subtractProduct(product.product_id._id)}>–</button>
+                                <p className="w-1/3 text-[11px] font-bold text-center text-slate-800 flex items-center justify-center">{product.quantity}</p>
+                                <button type="button" className="w-1/3 text-xs font-bold hover:bg-slate-200 h-full text-slate-600 flex items-center justify-center" onClick={() => addProduct(product.product_id._id)}>+</button>
+                              </div>
                               <button
                                 type="button"
                                 className="font-bold text-red-500 hover:underline"
@@ -143,7 +170,7 @@ function Carrito({ openModal, onCloseModal }) {
           <div className="border-t border-slate-100 px-4 py-6 sm:px-6 flex-col items-center bg-slate-50">
             <div className="flex justify-between items-baseline text-base font-medium text-slate-900 mb-6">
               <p className="text-sm font-bold uppercase tracking-wider text-slate-400">Total Purchase</p>
-              <p className="text-2xl font-black text-slate-900 tracking-tight">
+              <p className="text-2xl text-slate-900 tracking-tight">
                 {Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: 'USD',
