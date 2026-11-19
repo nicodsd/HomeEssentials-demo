@@ -14,6 +14,7 @@ import MiddlePhotoSection from "../components/HomeIndex/MiddlePhotoSection";
 import DiscountBanners from "../components/HomeIndex/DiscountBanners";
 import Brands from "../components/HomeIndex/Brands";
 import Newsletter from "../components/HomeIndex/Newsletter";
+import ProductCardSkeleton from "../components/HomeIndex/ProductCardSkeleton";
 
 import cards_home from '../../store/actions/cardsHome';
 import favNav_action from '../../store/actions/favNav';
@@ -29,6 +30,7 @@ const Home = () => {
   const { favNav } = favNav_action;
 
   const allProducts = useSelector(store => store.cardsHome.productsHome);
+  const loadingCards = useSelector(store => store.cardsHome.loading);
   const cards = useMemo(() => allProducts || [], [allProducts]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -47,10 +49,10 @@ const Home = () => {
   const displayedCards = useMemo(() => cards.slice(currentIndex, currentIndex + 4), [cards, currentIndex]);
 
   useEffect(() => {
-    if (!allProducts || allProducts.length === 0) {
+    if (cards.length === 0) {
       dispatch(cards_home_read());
     }
-  }, [dispatch, allProducts, cards_home_read]);
+  }, [dispatch, cards.length, cards_home_read]);
 
   const redirectToAllProducts = useCallback(() => {
     navigate('/allproducts');
@@ -174,20 +176,23 @@ const Home = () => {
           <div className="w-full">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-1 w-full justify-center justify-items-center relative">
               {/* Botón Izquierda */}
-              {currentIndex > 0 && (
+              {!(loadingCards || cards.length === 0) && currentIndex > 0 && (
                 <div onClick={prevSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -left-8 top-1/2 bottom-1/2 my-auto">
                   <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100 rotate-180' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
                 </div>
               )}
 
               {/* Botón Derecha */}
-              {currentIndex + 4 < cards.length && (
+              {!(loadingCards || cards.length === 0) && currentIndex + 4 < cards.length && (
                 <div onClick={nextSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
                   <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
                 </div>
               )}
 
-              {displayedCards.map((prod) => {
+              {loadingCards || cards.length === 0 ? (
+                [...Array(4)].map((_, index) => <ProductCardSkeleton key={index} />)
+              ) : (
+                displayedCards.map((prod) => {
                 const stockStatus = getStockStatus(prod.stock_Available);
                 return (
                   <div
@@ -246,7 +251,8 @@ const Home = () => {
                     </div>
                   </div>
                 );
-              })}
+              })
+              )}
             </div>
           </div>
 

@@ -8,7 +8,7 @@ export default function DiscountBanners() {
             id: 1,
             discount: "30% OFF",
             description: "On selected products",
-            image: "https://modernhomefurnishings.ca/wp-content/uploads/2021/01/carlos-2.png",
+            image: "https://silloneseuropa.com.ar/wp-content/uploads/2024/02/sillon-Heaven.webp",
             alt: "Sillón en promoción Carlos",
             bgColor: "bg-[#242222]",
             textSize: "text-xl"

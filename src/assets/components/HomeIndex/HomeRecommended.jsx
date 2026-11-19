@@ -4,9 +4,11 @@ import apiUrl from '../../../../api';
 import { useDispatch } from 'react-redux';
 import cartNav_action from '../../../store/actions/cartNav';
 import { toast } from 'react-toastify';
+import ProductCardSkeleton from './ProductCardSkeleton';
 
 const HomeRecommended = () => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -37,6 +39,8 @@ const HomeRecommended = () => {
         setRecommendedProducts(variedProducts);
       } catch (error) {
         console.error("Error fetching recommended products", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProducts();
@@ -95,7 +99,7 @@ const HomeRecommended = () => {
       });
   };
 
-  if (recommendedProducts.length === 0) return null;
+  const showSkeleton = loading || recommendedProducts.length === 0;
 
   return (
     <div className="flex flex-col md:flex-row justify-center items-center lg:bg-[#f4ecff] h-fit lg:w-[85%] mx-auto p-1 md:p-3 rounded-2xl group/cards text-[#000000] mt-5 md:mt-0">
@@ -115,19 +119,22 @@ const HomeRecommended = () => {
       <div className="w-full">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:gap-1 w-full justify-center justify-items-center relative">
           {/* Botón Izquierda */}
-          {currentIndex > 0 && (
+          {!showSkeleton && currentIndex > 0 && (
             <div onClick={prevSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -left-8 top-1/2 bottom-1/2 my-auto">
               <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100 rotate-180' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
             </div>
           )}
 
           {/* Botón Derecha */}
-          {currentIndex + 4 < recommendedProducts.length && (
+          {!showSkeleton && currentIndex + 4 < recommendedProducts.length && (
             <div onClick={nextSlide} className="absolute group-hover/cards:flex hidden group cursor-pointer justify-center items-center bg-gray-50 border border-gray-200 hover:bg-white shadow-sm rounded-full transition-all duration-100 z-50 w-16 h-16 -right-8 top-1/2 bottom-1/2 my-auto">
               <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className='opacity-40 group-hover:opacity-100 transition-all duration-100' viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
             </div>
           )}
-          {displayedProducts.map((prod) => {
+          {showSkeleton ? (
+            [...Array(4)].map((_, index) => <ProductCardSkeleton key={index} />)
+          ) : (
+            displayedProducts.map((prod) => {
             const stockStatus = getStockStatus(prod.stock_Available);
             return (
               <div
@@ -186,7 +193,8 @@ const HomeRecommended = () => {
                 </div>
               </div>
             );
-          })}
+          })
+          )}
         </div>
       </div>
 

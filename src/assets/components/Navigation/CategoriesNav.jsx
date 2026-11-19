@@ -13,7 +13,9 @@ const CategoriesNav = ({ isScrolled }) => {
   const { products_read } = products_actions;
 
   const categories = useSelector(store => store.categories.categories || []);
+  const loadingCategories = useSelector(store => store.categories.loading);
   const manufacturers = useSelector(store => store.manufacturerHome.manufacturers || []);
+  const loadingManufacturers = useSelector(store => store.manufacturerHome.loading);
   const categoriesChecked = useSelector(store => store.categories.categoriesCheked || []);
 
   // Estados de filtros
@@ -123,26 +125,32 @@ const CategoriesNav = ({ isScrolled }) => {
                   Select Manufacturers
                 </h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
-                  {manufacturers.map((manufacturer) => {
-                    const isChecked = manufacturerChecked.includes(manufacturer._id);
-                    return (
-                      <label
-                        key={manufacturer._id}
-                        className={`flex items-center justify-center px-3 py-2 rounded-xl cursor-pointer text-center text-[10px] font-medium tracking-wide transition-all border ${isChecked
-                          ? "bg-[#6333c7] text-white border-[#6333c7] shadow-sm"
-                          : "border-slate-200 hover:bg-slate-50 text-slate-600"
-                          }`}
-                      >
-                        <input
-                          type="checkbox"
-                          className="hidden"
-                          checked={isChecked}
-                          onChange={() => handleManufacturerChange(manufacturer._id)}
-                        />
-                        {manufacturer.name}
-                      </label>
-                    );
-                  })}
+                  {loadingManufacturers || manufacturers.length === 0 ? (
+                    [...Array(12)].map((_, index) => (
+                      <div key={index} className="h-8 rounded-xl skeleton-shimmer border border-slate-200/60" />
+                    ))
+                  ) : (
+                    manufacturers.map((manufacturer) => {
+                      const isChecked = manufacturerChecked.includes(manufacturer._id);
+                      return (
+                        <label
+                          key={manufacturer._id}
+                          className={`flex items-center justify-center px-3 py-2 rounded-xl cursor-pointer text-center text-[10px] font-medium tracking-wide transition-all border ${isChecked
+                            ? "bg-[#6333c7] text-white border-[#6333c7] shadow-sm"
+                            : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                            }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isChecked}
+                            onChange={() => handleManufacturerChange(manufacturer._id)}
+                          />
+                          {manufacturer.name}
+                        </label>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}
@@ -154,27 +162,33 @@ const CategoriesNav = ({ isScrolled }) => {
                   Select Categories
                 </h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
-                  {categories.map((category) => {
-                    const isChecked = categoriesChecked.includes(category._id);
-                    return (
-                      <button
-                        key={category._id}
-                        onClick={() => {
-                          navigate(`/allproducts/${category.name.toLowerCase().replace(/\s+/g, '-')}`);
-                          setActivePanel(null);
-                        }}
-                        className="flex items-center justify-center px-3 py-2 rounded-xl cursor-pointer text-center text-[10px] font-medium tracking-wide transition-all border border-slate-200 hover:bg-slate-50 text-slate-600"
-                      >
-                        <input
-                          type="checkbox"
-                          className="hidden"
-                          checked={isChecked}
-                          onChange={() => handleCategoryChange(category._id)}
-                        />
-                        {category.name}
-                      </button>
-                    );
-                  })}
+                  {loadingCategories || categories.length === 0 ? (
+                    [...Array(12)].map((_, index) => (
+                      <div key={index} className="h-8 rounded-xl skeleton-shimmer border border-slate-200/60" />
+                    ))
+                  ) : (
+                    categories.map((category) => {
+                      const isChecked = categoriesChecked.includes(category._id);
+                      return (
+                        <button
+                          key={category._id}
+                          onClick={() => {
+                            navigate(`/allproducts/${category.name.toLowerCase().replace(/\s+/g, '-')}`);
+                            setActivePanel(null);
+                          }}
+                          className="flex items-center justify-center px-3 py-2 rounded-xl cursor-pointer text-center text-[10px] font-medium tracking-wide transition-all border border-slate-200 hover:bg-slate-50 text-slate-600"
+                        >
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={isChecked}
+                            onChange={() => handleCategoryChange(category._id)}
+                          />
+                          {category.name}
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}

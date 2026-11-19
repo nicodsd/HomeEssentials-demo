@@ -24,6 +24,7 @@ const SearchAndLogoNavbar = () => {
 
   // Selectores Redux
   const categories = useSelector(store => store.categories.categories || []);
+  const loadingCategories = useSelector(store => store.categories.loading);
   const count = useSelector(store => store.cartNavReducer.cart || { cart: 0 });
   const favCount = useSelector(store => store.favNavReducer.fav || { fav: 0 });
   const { userLogin } = useSelector(store => store);
@@ -292,16 +293,22 @@ const SearchAndLogoNavbar = () => {
                   </button>
                   {mobileCategoriesOpen && (
                     <div className="flex flex-col gap-3 mt-3 pl-4 border-l-2 border-[#7847E0]/20 animate-fadeIn">
-                      {categories.map(cat => (
-                        <Anchor
-                          key={cat._id}
-                          to={`/allproducts/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
-                          onClick={() => setMenuIsOpen(false)}
-                          className="text-slate-600 text-sm hover:text-[#7847E0] transition-colors"
-                        >
-                          {cat.name}
-                        </Anchor>
-                      ))}
+                      {loadingCategories || categories.length === 0 ? (
+                        ['w-28', 'w-24', 'w-32', 'w-20', 'w-28', 'w-24'].map((width, index) => (
+                          <div key={index} className={`h-4 ${width} rounded skeleton-shimmer`} />
+                        ))
+                      ) : (
+                        categories.map(cat => (
+                          <Anchor
+                            key={cat._id}
+                            to={`/allproducts/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            onClick={() => setMenuIsOpen(false)}
+                            className="text-slate-600 text-sm hover:text-[#7847E0] transition-colors"
+                          >
+                            {cat.name}
+                          </Anchor>
+                        ))
+                      )}
                     </div>
                   )}
                 </div>

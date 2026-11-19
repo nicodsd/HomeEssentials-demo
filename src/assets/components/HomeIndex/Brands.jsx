@@ -6,6 +6,7 @@ const Brands = () => {
   const { manufacturers_read } = manufacturers_action;
   const dispatch = useDispatch();
   const manufacturers = useSelector(store => store.manufacturerHome.manufacturers || []);
+  const loading = useSelector(store => store.manufacturerHome.loading);
 
   useEffect(() => {
     if (manufacturers.length === 0) {
@@ -18,15 +19,23 @@ const Brands = () => {
       <div className='overflow-hidden flex w-full py-10 relative mask-gradient group'>
         {[...Array(8)].map((_, i) => (
           <div key={i} className='flex shrink-0 gap-4 px-2 animate-marquee group-hover:[animation-play-state:paused]'>
-            {manufacturers.map((brand, index) => (
-              <div key={`${brand._id}-${index}`} className="flex-shrink-0">
-                <img
-                  className="rounded-full md:w-20 md:h-20 w-12 h-12 object-cover hover:scale-105 transition-transform duration-300"
-                  src={brand.logo}
-                  alt={brand.name || "brand"}
-                />
-              </div>
-            ))}
+            {loading || manufacturers.length === 0 ? (
+              [...Array(6)].map((_, index) => (
+                <div key={index} className="flex-shrink-0">
+                  <div className="rounded-full md:w-20 md:h-20 w-12 h-12 skeleton-shimmer" />
+                </div>
+              ))
+            ) : (
+              manufacturers.map((brand, index) => (
+                <div key={`${brand._id}-${index}`} className="flex-shrink-0">
+                  <img
+                    className="rounded-full md:w-20 md:h-20 w-12 h-12 object-cover hover:scale-105 transition-transform duration-300"
+                    src={brand.logo}
+                    alt={brand.name || "brand"}
+                  />
+                </div>
+              ))
+            )}
           </div>
         ))}
       </div>

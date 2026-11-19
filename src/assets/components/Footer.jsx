@@ -10,6 +10,7 @@ const Footer = () => {
   const { categories_read } = categories_actions;
   const dispatch = useDispatch();
   const categories = useSelector(store => store.categories.categories || []);
+  const loading = useSelector(store => store.categories.loading);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -20,7 +21,7 @@ const Footer = () => {
 
   return (
     <footer className="pt-20 pb-4 border-t text-slate-600 transition-all">
-      <div className="w-[87%] mx-auto px-6 lg:px-8">
+      <div className="w-[87%] mx-auto lg:px-8">
 
         {/* Grilla Principal */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 mb-12">
@@ -63,16 +64,24 @@ const Footer = () => {
           <div className="flex flex-col gap-4">
             <h4 className="text-slate-900 text-base font-bold uppercase">Store</h4>
             <ul className="flex flex-col gap-1 text-sm">
-              {categories.slice(0, 6).map((cat) => (
-                <li key={cat._id}>
-                  <Anchor
-                    to={`/allproducts/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="hover:text-indigo-600 hover:translate-x-1 inline-block transition-all duration-200 text-slate-500"
-                  >
-                    {cat.name}
-                  </Anchor>
-                </li>
-              ))}
+              {loading || categories.length === 0 ? (
+                ['w-24', 'w-20', 'w-28', 'w-16', 'w-24', 'w-20'].map((width, index) => (
+                  <li key={index} className="py-1">
+                    <div className={`h-3.5 ${width} rounded skeleton-shimmer`} />
+                  </li>
+                ))
+              ) : (
+                categories.slice(0, 6).map((cat) => (
+                  <li key={cat._id}>
+                    <Anchor
+                      to={`/allproducts/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      className="hover:text-indigo-600 hover:translate-x-1 inline-block transition-all duration-200 text-slate-500"
+                    >
+                      {cat.name}
+                    </Anchor>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
           {/* Columna 3: Soporte al cliente */}
